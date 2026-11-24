@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Department Queue {% if dept %} | {{ dept.name }}{% endif %}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+<style>
+  /* Only layout-specific styles that aren't in the main CSS */
+  body { background: var(--bg-light); font-family: 'Inter', system-ui, sans-serif; margin: 0; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; background:var(--bg-gradient); color:var(--text-light); padding:14px 24px; box-shadow: var(--shadow-md); }
+  .topbar h1 { font-size:1.15rem; margin:0; font-family: 'Playfair Display', serif; }
+  .topbar select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text-light); padding: 8px 12px; border-radius: var(--radius-sm); font-size: .85rem; }
+  .topbar select option { background: var(--primary-dark); color: var(--text-light); }
+  .topbar a { color:var(--secondary-light); margin-left:14px; text-decoration:none; font-size:.85rem; font-weight: 500; transition: var(--transition-smooth); }
+  .topbar a:hover { color:var(--secondary); }
+  .wrap { max-width:1100px; margin:20px auto; padding:0 16px; }
+  .cols { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+  @media(max-width:900px){ .cols{ grid-template-columns:1fr; } }
+  .act { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
+  #flash { position:fixed; top:20px; right:20px; padding:12px 20px; border-radius:var(--radius-md); display:none; z-index:9999; font-weight: 600; animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  #flash.success { background: linear-gradient(135deg, var(--success), #2ecc71); color: white; }
+  #flash.error { background: linear-gradient(135deg, var(--danger), #e74c3c); color: white; }
+  #flash.warning { background: linear-gradient(135deg, var(--warning), #f1c40f); color: var(--primary-dark); }
+</style>
+</head>
+<body>
+<!-- Top Navigation Bar -->
+<nav class="topbar">
+  <h1><i class="fas fa-building"></i> {% if dept %}{{ dept.name }} Queue{% else %}Departments{% endif %}</h1>
+  <div>
+    <select onchange="if(this.value) location.href='/department/'+this.value;">
+      <option value="">Switch department…</option>
+      {% for d in departments %}<option value="{{ d.department_id }}" {% if dept and d.department_id==dept.department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+    </select>
+    <a href="/reception"><i class="fas fa-desktop"></i> Reception</a>
+    <a href="/checkin"><i class="fas fa-qrcode"></i> Check-in</a>
+    <a href="/doctor-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+</nav>
+
+<div id="flash"></div>
+<div class="wrap">
+{% if dept %}
+  <!-- Current Token Card -->
+  <div class="current-token-card animate-fadeInDown">
+    <div class="label"><i class="fas fa-bell"></i> NOW SERVING</div>
+    <div class="tok">{{ current_token.token_code if current_token else '—' }}</div>
+    <div class="wait-time">Est. wait for next patient: ~{{ est_wait_min }} min</div>
+  </div>
+
+  <!-- Department Stats Cards -->
+  <div class="stats-grid">
+    <div class="dept-stat-card kpi-card-warning animate-fadeInUp delay-1">
+      <div class="n">{{ stats.waiting }}</div>
+      <div class="t">Waiting</div>
+    </div>
+    <div class="dept-stat-card kpi-card-info animate-fadeInUp delay-2">
+      <div class="n">{{ stats.called }}</div>
+      <div class="t">Called</div>
+    </div>
+    <div class="dept-stat-card kpi-card-primary animate-fadeInUp delay-3">
+      <div class="n">{{ stats.consulting }}</div>
+      <div class="t">Consulting</div>
+    </div>
+    <div class="dept-stat-card kpi-card-success animate-fadeInUp delay-4">
+      <div class="n">{{ stats.completed }}</div>
+      <div class="t">Completed</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <!-- Queue Card -->
+    <div class="card card-elevated animate-fadeInUp delay-1">
+      <div class="card-header">
+        <h3><i class="fas fa-list-ol"></i> Queue</h3>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Patient</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for q in queue %}
+              <tr data-token="{{ q.token_id }}" data-dept="{{ dept.department_id }}">
+                <td><b>{{ q.token_code }}</b></td>
+                <td>{{ q.patient_name or q.patient_id }}</td>
+                <td><span class="badge badge-primary">{{ q.queue_category }}</span></td>
+                <td>
+                  <span class="chip {% if q.status == 'waiting' %}chip-info{% elif q.status == 'called' %}chip-success{% else %}chip-warning{% endif %}">
+                    {{ q.status }}
+                  </span>
+                </td>
+                <td>
+                  {% if q.status == 'waiting' %}
+                    <button onclick="setStatus({{ q.token_id }}, 'called')" class="btn-pro btn-pro-success btn-pro-sm"><i class="fas fa-bell"></i> Call</button>
+                  {% elif q.status == 'called' %}
+                    <button onclick="setStatus({{ q.token_id }}, 'consulting')" class="btn-pro btn-pro-primary btn-pro-sm"><i class="fas fa-user-md"></i> Start Consult</button>
+                  {% elif q.status == 'consulting' %}
+                    <button onclick="setStatus({{ q.token_id }}, 'completed')" class="btn-pro btn-pro-success btn-pro-sm"><i class="fas fa-check"></i> Complete</button>
+                  {% endif %}
+                  <button onclick="setStatus({{ q.token_id }}, 'skipped')" class="btn-pro btn-pro-danger btn-pro-sm"><i class="fas fa-forward"></i> Skip</button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="empty-state" style="padding: 30px;">
+                  <i class="fas fa-list"></i>
+                  <h3>Queue is Empty</h3>
+                  <p>No patients waiting at the moment.</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="act" style="padding: 20px 28px; border-top: 1px solid rgba(201, 162, 39, 0.1);">
+          <button onclick="callNext()" class="btn-pro btn-pro-primary"><i class="fas fa-forward"></i> Call Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Doctors Card -->
+      <div class="card card-elevated animate-fadeInUp delay-2">
+        <div class="card-header">
+          <h3><i class="fas fa-user-md"></i> Doctors on Duty</h3>
+        </div>
+        <div class="card-body">
+          {% for doc in doctors %}
+          <div class="result-item" style="cursor: default;">
+            <i class="fas fa-user-md" style="color: var(--primary); font-size: 1.3rem;"></i>
+            <div style="flex: 1;">
+              <div class="result-item-name">{{ doc.name }}</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ doc.specialization }}</div>
+            </div>
+            <span class="chip chip-success">Active</span>
+          </div>
+          {% else %}
+          <div class="empty-state" style="padding: 20px;">
+            <i class="fas fa-user-md"></i>
+            <h3>No Doctors Assigned</h3>
+            <p>No doctors are currently assigned to this department.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Recent Tokens Card -->
+      <div class="card card-elevated animate-fadeInUp delay-3">
+        <div class="card-header">
+          <h3><i class="fas fa-history"></i> Recent Tokens</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for h in history %}
+                <tr>
+                  <td><b>{{ h.token_code }}</b></td>
+                  <td>
+                    <span class="chip {% if h.status == 'completed' %}chip-success{% elif h.status == 'consulting' %}chip-primary{% elif h.status == 'called' %}chip-info{% elif h.status == 'skipped' %}chip-danger{% else %}chip-warning{% endif %}">
+                      {{ h.status }}
+                    </span>
+                  </td>
+                  <td>{{ h.created_at }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var CSRF = {{ csrf_token|tojson }};
+    function setStatus(tokenId, status) {
+      var deptId = {{ dept.department_id }};
+      fetch('/api/queue/token/' + tokenId + '/status', { method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ status: status, department_id: deptId, csrf_token: CSRF }) })
+        .then(r=>r.json()).then(d => { if (d.success) location.reload(); else flash(d.message, true); });
+    }
+    function callNext() {
+      fetch('/api/queue/{{ dept.department_id }}/call-next', { method:'POST',
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify({ csrf_token: CSRF }) })
+        .then(r=>r.json()).then(d => { if (d.success) { flash('Called ' + (d.token.token_code||'') + ' ✔'); setTimeout(()=>location.reload(), 800); } else flash(d.message, true); });
+    }
+    function flash(msg, err) {
+      var f = document.getElementById('flash');
+      f.textContent = msg;
+      f.className = err ? 'flash-toast error' : 'flash-toast success';
+      f.style.display = 'flex';
+      setTimeout(() => f.style.display = 'none', 3000);
+    }
+    setInterval(function(){ location.reload(); }, 20000); // polling fallback refresh
+  </script>
+{% else %}
+  <!-- Department Selection -->
+  <div class="card card-elevated animate-fadeInUp">
+    <div class="card-header">
+      <h3><i class="fas fa-building"></i> Select a Department</h3>
+    </div>
+    <div class="card-body">
+      {% for d in departments %}
+      <a href="/department/{{ d.department_id }}" class="result-item">
+        <i class="fas fa-hospital" style="color: var(--secondary); font-size: 1.3rem;"></i>
+        <div style="flex: 1;">
+          <div class="result-item-name">{{ d.name }}</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ d.operating_hours }}</div>
+        </div>
+        <i class="fas fa-chevron-right" style="color: var(--text-muted);"></i>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+</div>
+</body>
+</html>

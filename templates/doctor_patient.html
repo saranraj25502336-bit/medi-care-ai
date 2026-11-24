@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Details | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon"><i class="fas fa-hospital"></i></div>
+            <span>MediCare AI</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/doctor"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/find-patient"><i class="fas fa-search"></i> Find Patient</a></li>
+            <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+            <li>
+                <div class="user-badge">
+                    <div class="avatar" style="background: var(--info);"><i class="fas fa-user-md"></i></div>
+                    <span class="user-name" id="doctorNameDisplay">Doctor</span>
+                </div>
+            </li>
+            <li><a href="/doctor-logout" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="container">
+            <!-- Back Button -->
+            <a href="/doctor" class="btn btn-secondary btn-sm mb-30">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+
+            <!-- Patient Header -->
+            <div class="card animate-fadeInDown mb-30">
+                <div class="card-body" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: var(--radius-md);">
+                    <div class="flex-between" style="flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <h2 style="color: white; margin-bottom: 6px;"><i class="fas fa-user"></i> {{ patient.name }}</h2>
+                            <p style="opacity: 0.9; font-size: 0.88rem;">Patient ID: #{{ patient.patient_id }} | Age: {{ patient.age }} | {{ patient.email }} | {{ patient.phone }}</p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openPrescriptionForm()">
+                            <i class="fas fa-prescription"></i> Add Prescription
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical History -->
+            <div class="card animate-fadeInUp delay-1">
+                <div class="card-header">
+                    <h3><i class="fas fa-notes-medical"></i> Medical History</h3>
+                    <span class="badge badge-primary">{{ records|length }} Records</span>
+                </div>
+                <div class="card-body">
+                    {% if records %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Diagnosis</th>
+                                    <th>Treatment</th>
+                                    <th>Doctor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                <tr>
+                                    <td>{{ record.date }}</td>
+                                    <td>{{ record.diagnosis }}</td>
+                                    <td>{{ record.treatment }}</td>
+                                    <td>Dr. {{ record.doctor_name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-medical"></i>
+                            <h3>No Medical Records</h3>
+                            <p style="font-size: 0.85rem;">No medical history available for this patient</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prescription Modal -->
+    <div class="modal-overlay" id="prescriptionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-prescription"></i> Add Prescription</h3>
+                <button onclick="closePrescriptionModal()" class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="prescriptionForm" onsubmit="addPrescription(event)">
+                    <div class="form-group">
+                        <label><i class="fas fa-pills"></i> Medication</label>
+                        <input type="text" class="form-control" placeholder="Enter medication name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Dosage</label>
+                        <input type="text" class="form-control" placeholder="e.g., 500mg - 3 times/day" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-notes-medical"></i> Notes</label>
+                        <textarea class="form-control" rows="3" placeholder="Additional instructions"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-check"></i> Add Prescription
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        function openPrescriptionForm() {
+            document.getElementById('prescriptionModal').classList.add('active');
+        }
+
+        function closePrescriptionModal() {
+            document.getElementById('prescriptionModal').classList.remove('active');
+        }
+
+        function addPrescription(e) {
+            e.preventDefault();
+            showToast('success', 'Prescription added successfully!');
+            closePrescriptionModal();
+        }
+
+        function showToast(type, message) {
+            var container = document.getElementById('toastContainer');
+            var icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i> ' + message;
+            toast.onclick = function() { toast.remove(); };
+            
+            container.appendChild(toast);
+            
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 5000);
+        }
+
+        document.getElementById('prescriptionModal').addEventListener('click', function(e) {
+            if (e.target === this) closePrescriptionModal();
+        });
+    </script>
+</body>
+</html>

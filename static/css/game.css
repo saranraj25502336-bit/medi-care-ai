@@ -1,0 +1,468 @@
+/* ============================================
+   SUBWAY RUNNER GAME STYLES
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+}
+
+#game-canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+}
+
+/* ============================================
+   SCREENS (Start, Pause, Game Over)
+   ============================================ */
+
+.screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+    width: 90%;
+    max-width: 400px;
+    padding: 2rem;
+    background: rgba(13, 27, 42, 0.95);
+    border-radius: 16px;
+    border: 2px solid #00d4ff;
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.3),
+                inset 0 0 30px rgba(0, 212, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.screen.hidden {
+    display: none;
+}
+
+.screen h1 {
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    background: linear-gradient(135deg, #00d4ff 0%, #ff6b35 50%, #00d4ff 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s ease-in-out infinite;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+
+.screen h2 {
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
+    font-weight: 800;
+    color: #ff6b35;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+}
+
+.subtitle {
+    color: #88a4c8;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.btn {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn.primary,
+.btn {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    color: #0a0a0f;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+}
+
+.btn.primary:hover,
+.btn:hover {
+    background: linear-gradient(135deg, #00eaff 0%, #00aadd 100%);
+    box-shadow: 0 6px 30px rgba(0, 212, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: #00d4ff;
+    border: 2px solid #00d4ff;
+    margin-left: 1rem;
+}
+
+.btn.secondary:hover {
+    background: rgba(0, 212, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.controls-info {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 0.75rem;
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid #00d4ff;
+    border-radius: 6px;
+    font-weight: 700;
+    color: #00d4ff;
+    font-size: 1.2rem;
+}
+
+.mobile-controls-hint {
+    margin-top: 1.5rem;
+    color: #5a7a9a;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* ============================================
+   HUD (Heads Up Display)
+   ============================================ */
+
+#hud {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    z-index: 5;
+    padding: 0.5rem 1.5rem;
+    background: rgba(13, 27, 42, 0.85);
+    border-radius: 50px;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.hud-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #5a7a9a;
+    font-weight: 600;
+}
+
+.hud-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
+    color: #00d4ff;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.lives-display {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.life-heart {
+    width: 24px;
+    height: 24px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff3366'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center/contain no-repeat;
+    filter: drop-shadow(0 0 6px #ff3366);
+    transition: all 0.3s ease;
+}
+
+.life-heart.lost {
+    opacity: 0.2;
+    filter: grayscale(1) drop-shadow(0 0 0 transparent);
+}
+
+.pause-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 212, 255, 0.5);
+    background: rgba(0, 212, 255, 0.1);
+    color: #00d4ff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 1rem;
+}
+
+.pause-btn:hover,
+.pause-btn:active {
+    background: rgba(0, 212, 255, 0.3);
+    border-color: #00d4ff;
+    transform: scale(1.1);
+}
+
+/* ============================================
+   MOBILE TOUCH CONTROLS
+   ============================================ */
+
+#mobile-controls {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 1.5rem;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.touch-control {
+    pointer-events: auto;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 16px;
+    background: rgba(13, 27, 42, 0.7);
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+.touch-control:active {
+    background: rgba(0, 212, 255, 0.3);
+    border-color: #00d4ff;
+    transform: scale(0.95);
+}
+
+.touch-control.left,
+.touch-control.right {
+    width: 70px;
+    height: 70px;
+}
+
+.touch-control.jump,
+.touch-control.slide {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
+}
+
+.touch-control::before {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 30px;
+    background: currentColor;
+    mask: no-repeat center/contain;
+    -webkit-mask: no-repeat center/contain;
+    color: #00d4ff;
+    filter: drop-shadow(0 0 6px #00d4ff);
+}
+
+.touch-control.left::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'%3E%3Cpath d='M15 18l-6-6 6-6'/%3E%3C/svg%3E");
+    transform: rotate(180deg);
+}
+
+.touch-control.right::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+    transform: rotate(180deg);
+}
+
+.touch-control.jump::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'%3E%3Cpath d='M18 15l-6-6-6 6'/%3E%3C/svg%3E");
+    width: 36px;
+    height: 36px;
+}
+
+.touch-control.slide::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    width: 36px;
+    height: 36px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    #hud {
+        top: 0.5rem;
+        padding: 0.4rem 1rem;
+        gap: 1rem;
+    }
+
+    .hud-value {
+        font-size: 1.1rem;
+    }
+
+    .hud-label {
+        font-size: 0.55rem;
+    }
+
+    .life-heart {
+        width: 20px;
+        height: 20px;
+    }
+
+    .pause-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .screen {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #hud {
+        transform: translateX(-50%) scale(0.9);
+    }
+
+    .touch-control.left,
+    .touch-control.right {
+        width: 60px;
+        height: 60px;
+    }
+
+    .touch-control.jump,
+    .touch-control.slide {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+/* Landscape mobile adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+    #hud {
+        top: 0.3rem;
+        padding: 0.3rem 0.8rem;
+    }
+
+    .hud-value {
+        font-size: 1rem;
+    }
+
+    #mobile-controls {
+        bottom: 0.5rem;
+    }
+
+    .touch-control.left,
+    .touch-control.right {
+        width: 55px;
+        height: 55px;
+    }
+
+    .touch-control.jump,
+    .touch-control.slide {
+        width: 65px;
+        height: 65px;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .touch-control::before {
+        filter: drop-shadow(0 0 4px #00d4ff);
+    }
+
+    .life-heart {
+        filter: drop-shadow(0 0 4px #ff3366);
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible for accessibility */
+button:focus-visible,
+.touch-control:focus-visible {
+    outline: 3px solid #00d4ff;
+    outline-offset: 2px;
+}

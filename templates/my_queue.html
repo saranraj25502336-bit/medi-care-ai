@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Queue | MediCare AI Hospital</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+  body { background:#f4f7fb; font-family:'Inter',system-ui,sans-serif; margin:0; color:#0f172a; }
+  .topbar { background:#0f172a; color:#fff; padding:14px 24px; display:flex; justify-content:space-between; }
+  .topbar a { color:#c9a227; text-decoration:none; font-size:.85rem; }
+  .wrap { max-width:640px; margin:28px auto; padding:0 16px; }
+  .card { background:#fff; border-radius:16px; padding:24px; box-shadow:0 4px 16px rgba(15,23,42,.08); text-align:center; }
+  .token { font-size:2.4rem; font-weight:800; color:#0f172a; letter-spacing:1px; }
+  .dept { color:#c9a227; font-weight:700; margin-top:4px; }
+  .status { display:inline-block; margin-top:10px; padding:6px 16px; border-radius:50px; font-weight:700; font-size:.85rem; }
+  .status.waiting { background:#eff6ff; color:#1d4ed8; }
+  .status.called { background:#fef9c3; color:#a16207; animation: pulse 1.5s infinite; }
+  .status.consulting { background:#dcfce7; color:#15803d; }
+  .status.completed { background:#f1f5f9; color:#475569; }
+  @keyframes pulse { 50% { opacity:.6; } }
+  .info { display:flex; justify-content:space-around; margin-top:18px; font-size:.85rem; color:#475569; }
+  .info b { display:block; font-size:1.2rem; color:#0f172a; }
+  .empty { color:#94a3b8; padding:30px 0; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><b>My Queue</b></div>
+  <a href="/dashboard">Dashboard</a><a href="/logout">Logout</a>
+</div>
+<div class="wrap">
+  {% if checkin and token %}
+  <div class="card">
+    <div style="color:#64748b; font-size:.8rem;">YOUR TOKEN</div>
+    <div class="token">{{ token.token_code }}</div>
+    <div class="dept">{{ token.department_name }}</div>
+    <div><span class="status {{ token.status }}">{{ token.status }}</span></div>
+    <div class="info">
+      <div>Patients ahead<b>{{ ahead }}</b></div>
+      <div>Est. wait<b>~{{ token.est_wait_min if token.est_wait_min is not none else 5 }} min</b></div>
+    </div>
+    <div style="margin-top:14px; font-size:.75rem; color:#94a3b8;">Estimated waiting times are approximate.</div>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="empty">You have no active check-in today.<br><br>
+      <a href="/appointments" style="color:#c9a227; font-weight:700;">Book or view appointments →</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+<script>
+  setInterval(function () { location.reload(); }, 15000);
+</script>
+</body>
+</html>

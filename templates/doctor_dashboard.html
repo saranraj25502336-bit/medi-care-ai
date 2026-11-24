@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon"><i class="fas fa-hospital"></i></div>
+            <span>MediCare AI</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/doctor" class="active"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/find-patient"><i class="fas fa-search"></i> Find Patient</a></li>
+            <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+            <li>
+                <div class="user-badge">
+                    <div class="avatar" style="background: var(--info);"><i class="fas fa-user-md"></i></div>
+                    <span class="user-name" id="doctorNameDisplay">Doctor</span>
+                </div>
+            </li>
+            <li><a href="/doctor-logout" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="animate-fadeInDown" style="margin-bottom: 30px;">
+                <h1 style="font-size: 1.8rem; margin-bottom: 6px;">
+                    <i class="fas fa-user-md" style="color: var(--secondary);"></i> Doctor Dashboard
+                </h1>
+                <p style="color: var(--text-secondary);">Manage your patients and appointments</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card animate-fadeInUp delay-1">
+                    <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <h4>{{ patients|length }}</h4>
+                        <p>Total Patients</p>
+                    </div>
+                </div>
+                <div class="stat-card animate-fadeInUp delay-2">
+                    <div class="stat-icon green"><i class="fas fa-notes-medical"></i></div>
+                    <div class="stat-info">
+                        <h4>{{ records|length if records else 0 }}</h4>
+                        <p>Total Prescriptions</p>
+                    </div>
+                </div>
+                <div class="stat-card animate-fadeInUp delay-3">
+                    <div class="stat-icon yellow"><i class="fas fa-calendar-check"></i></div>
+                    <div class="stat-info">
+                        <h4>{{ appointments|length if appointments else 0 }}</h4>
+                        <p>Total Appointments</p>
+                    </div>
+                </div>
+                <div class="stat-card animate-fadeInUp delay-4">
+                    <div class="stat-icon red"><i class="fas fa-star"></i></div>
+                    <div class="stat-info">
+                        <h4>{{ doctors|length }}</h4>
+                        <p>Doctors Available</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Grid -->
+            <div class="grid-2">
+                <!-- Patients List with Full Details -->
+                <div class="card animate-fadeInUp delay-2">
+                    <div class="card-header">
+                        <h3><i class="fas fa-users"></i> Registered Patients</h3>
+                        <span class="badge badge-primary">{{ patients|length }} Total</span>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                        {% if patients %} {% for patient in patients %}
+                        <div style="padding: 12px; border: 1px solid #e0e6f8; border-radius: var(--radius-sm); margin-bottom: 10px; background: white;">
+                            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">
+                                    {{ patient.name[0] }}
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary);">{{ patient.name }}</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin-top: 4px; font-size: 0.75rem; color: var(--text-secondary);">
+                                        <span><i class="fas fa-id-card"></i> #{{ patient.patient_id }}</span>
+                                        <span><i class="fas fa-calendar"></i> Age: {{ patient.age }}</span>
+                                        <span><i class="fas fa-phone"></i> {{ patient.phone }}</span>
+                                        <span><i class="fas fa-envelope"></i> {{ patient.email }}</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
+                                    <button class="btn btn-sm btn-primary" onclick="openPrescriptionModal({{ patient.patient_id }}, '{{ patient.name }}')" style="font-size: 0.7rem; padding: 4px 10px; white-space: nowrap;">
+                                        <i class="fas fa-prescription"></i> Add Rx
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" onclick="openEditPatientModal({{ patient.patient_id }}, '{{ patient.name }}', {{ patient.age }}, '{{ patient.phone }}', '{{ patient.email }}')" style="font-size: 0.7rem; padding: 4px 10px; white-space: nowrap;">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" onclick="viewPatientDetails({{ patient.patient_id }})" style="font-size: 0.7rem; padding: 4px 10px; white-space: nowrap;">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %} {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-user-injured"></i>
+                            <h3>No Patients Yet</h3>
+                            <p style="font-size: 0.85rem;">Patients will appear here once they register</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Prescriptions -->
+                <div class="card animate-fadeInUp delay-3">
+                    <div class="card-header">
+                        <h3><i class="fas fa-prescription"></i> Recent Prescriptions</h3>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {% if records %} {% for record in records[:10] %}
+                        <div style="padding: 10px; border-bottom: 1px solid #eef2fe; font-size: 0.82rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <strong>{{ record.patient_name }}</strong>
+                                <span style="color: var(--text-secondary); font-size: 0.75rem;">{{ record.visit_date }}</span>
+                            </div>
+                            <div style="color: var(--text-secondary);">Dr. {{ record.doctor_name }} - <strong>{{ record.diagnosis }}</strong></div>
+                            <div style="color: var(--success); font-size: 0.78rem;">{{ record.prescription }}</div>
+                        </div>
+                        {% endfor %} {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-prescription"></i>
+                            <h3>No Prescriptions Yet</h3>
+                            <p style="font-size: 0.85rem;">Click "Add Rx" next to a patient to add a prescription</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Appointments -->
+            <div class="card animate-fadeInUp delay-4 mt-30">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt"></i> All Appointments</h3>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for apt in appointments %}
+                                <tr>
+                                    <td><strong>{{ apt.patient_name }}</strong></td>
+                                    <td>Dr. {{ apt.doctor_name }}</td>
+                                    <td>{{ apt.appointment_date }}</td>
+                                    <td>{{ apt.appointment_time }}</td>
+                                    <td>
+                                        <span class="badge {% if apt.status == 'approved' %}badge-success{% elif apt.status == 'rejected' %}badge-danger{% else %}badge-warning{% endif %}">
+                                                {{ apt.status }}
+                                            </span>
+                                    </td>
+                                    <td>
+                                        {% if apt.status == 'pending' %}
+                                        <button class="btn btn-sm btn-success" onclick="updateAppointment({{ apt.appointment_id }}, 'approved')" style="padding: 4px 8px; font-size: 0.7rem;"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="updateAppointment({{ apt.appointment_id }}, 'rejected')" style="padding: 4px 8px; font-size: 0.7rem;"><i class="fas fa-times"></i> Reject</button> {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>No Appointments</h3>
+                        <p style="font-size: 0.85rem;">No appointments have been booked yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Patient Modal -->
+    <div class="modal-overlay" id="editPatientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Edit Patient</h3>
+                <button onclick="closeEditPatientModal()" class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPatientForm" onsubmit="editPatient(event)">
+                    <input type="hidden" id="editPatientId">
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Patient Name</label>
+                        <input type="text" class="form-control" id="editPatientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Age</label>
+                        <input type="number" class="form-control" id="editPatientAge" min="1" max="150" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Phone</label>
+                        <input type="text" class="form-control" id="editPatientPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" class="form-control" id="editPatientEmail" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-save"></i> Update Patient
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prescription Modal (Connected to Backend) -->
+    <div class="modal-overlay" id="prescriptionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-prescription"></i> Add Prescription</h3>
+                <button onclick="closePrescriptionModal()" class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="prescriptionForm" onsubmit="addPrescription(event)">
+                    <input type="hidden" id="rxPatientId" name="patient_id">
+
+                    <div style="background: var(--bg-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+                        <strong>Patient:</strong> <span id="rxPatientName"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-stethoscope"></i> Symptoms</label>
+                        <textarea class="form-control" id="rxSymptoms" rows="2" placeholder="Describe symptoms"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-diagnoses"></i> Diagnosis *</label>
+                        <input type="text" class="form-control" id="rxDiagnosis" placeholder="Enter diagnosis" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-pills"></i> Prescription *</label>
+                        <textarea class="form-control" id="rxPrescription" rows="3" placeholder="Enter medication, dosage, and instructions" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user-md"></i> Doctor Name</label>
+                        <select class="form-control" id="rxDoctorName">
+                            {% for doctor in doctors %}
+                            <option value="{{ doctor.name }}">{{ doctor.name }} - {{ doctor.specialization }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-notes-medical"></i> Additional Notes</label>
+                        <textarea class="form-control" id="rxNotes" rows="2" placeholder="Any additional notes"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 0.95rem;">
+                        <i class="fas fa-check"></i> Save Prescription & Notify Patient
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let selectedPatientId = null;
+
+        function viewPatientDetails(patientId) {
+            window.open('/doctor/patient/' + patientId, '_blank');
+        }
+
+        function openPrescriptionModal(patientId, patientName) {
+            selectedPatientId = patientId;
+            document.getElementById('rxPatientId').value = patientId;
+            document.getElementById('rxPatientName').textContent = patientName + ' (ID: #' + patientId + ')';
+            document.getElementById('prescriptionModal').classList.add('active');
+        }
+
+        function closePrescriptionModal() {
+            document.getElementById('prescriptionModal').classList.remove('active');
+            document.getElementById('prescriptionForm').reset();
+        }
+
+        async function addPrescription(e) {
+            e.preventDefault();
+
+            const patientId = document.getElementById('rxPatientId').value;
+            const symptoms = document.getElementById('rxSymptoms').value;
+            const diagnosis = document.getElementById('rxDiagnosis').value;
+            const prescription = document.getElementById('rxPrescription').value;
+            const doctorSelect = document.getElementById('rxDoctorName');
+            const doctorName = doctorSelect.options[doctorSelect.selectedIndex].text.split(' - ')[0];
+            const notes = document.getElementById('rxNotes').value;
+
+            if (!patientId || !diagnosis || !prescription) {
+                showToast('error', 'Please fill in Diagnosis and Prescription');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const response = await fetch('/add-prescription', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: parseInt(patientId),
+                        symptoms: symptoms,
+                        diagnosis: diagnosis,
+                        prescription: prescription,
+                        doctor_name: doctorName,
+                        doctor_notes: notes
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Prescription added! Patient will be notified via email.');
+                    closePrescriptionModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('error', result.message || 'Failed to add prescription');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Prescription & Notify Patient';
+        }
+
+        async function updateAppointment(appointmentId, status) {
+            try {
+                const response = await fetch('/update-appointment-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appointment_id: appointmentId,
+                        status: status
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('success', 'Appointment ' + status + ' successfully!');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('error', result.message);
+                }
+            } catch (err) {
+                showToast('error', 'Connection error');
+            }
+        }
+
+        // Edit Patient functions
+        function openEditPatientModal(patientId, name, age, phone, email) {
+            document.getElementById('editPatientId').value = patientId;
+            document.getElementById('editPatientName').value = name;
+            document.getElementById('editPatientAge').value = age;
+            document.getElementById('editPatientPhone').value = phone;
+            document.getElementById('editPatientEmail').value = email;
+            document.getElementById('editPatientModal').classList.add('active');
+        }
+
+        function closeEditPatientModal() {
+            document.getElementById('editPatientModal').classList.remove('active');
+        }
+
+        async function editPatient(e) {
+            e.preventDefault();
+            const patientId = document.getElementById('editPatientId').value;
+            const name = document.getElementById('editPatientName').value.trim();
+            const age = document.getElementById('editPatientAge').value;
+            const phone = document.getElementById('editPatientPhone').value.trim();
+            const email = document.getElementById('editPatientEmail').value.trim();
+
+            if (!name || !age || !phone || !email) {
+                showToast('error', 'All fields are required');
+                return;
+            }
+
+            try {
+                const response = await fetch('/doctor/update-patient', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: parseInt(patientId),
+                        name,
+                        age: parseInt(age),
+                        phone,
+                        email
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('success', result.message);
+                    closeEditPatientModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('error', result.message || 'Failed to update patient');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        document.getElementById('editPatientModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditPatientModal();
+        });
+
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i> ' + message;
+            toast.onclick = function() {
+                toast.remove();
+            };
+
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(function() {
+                    toast.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        document.getElementById('prescriptionModal').addEventListener('click', function(e) {
+            if (e.target === this) closePrescriptionModal();
+        });
+    </script>
+</body>
+
+</html>

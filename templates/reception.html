@@ -1,0 +1,310 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reception Dashboard | MediCare AI Hospital</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+<style>
+  /* Only layout-specific styles that aren't in the main CSS */
+  body { background: var(--bg-light); font-family: 'Inter', system-ui, sans-serif; margin: 0; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; background:var(--bg-gradient); color:var(--text-light); padding:14px 24px; box-shadow: var(--shadow-md); }
+  .topbar h1 { font-size:1.15rem; margin:0; font-family: 'Playfair Display', serif; }
+  .topbar .links a { color:var(--secondary-light); margin-left:14px; text-decoration:none; font-size:.85rem; font-weight: 500; transition: var(--transition-smooth); }
+  .topbar .links a:hover { color:var(--secondary); }
+  .wrap { max-width: 1200px; margin: 20px auto; padding: 0 16px; }
+  .grid2 { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+  @media(max-width:900px){ .grid2{ grid-template-columns:1fr; } }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .searchbox { flex:1; min-width:220px; }
+  #checkinResult { margin-top: 12px; font-size: 0.85rem; }
+  #flash { position:fixed; top:14px; right:14px; padding:12px 20px; border-radius:var(--radius-md); display:none; z-index:99; font-weight: 600; animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  #flash.success { background: linear-gradient(135deg, var(--success), #2ecc71); color: white; }
+  #flash.error { background: linear-gradient(135deg, var(--danger), #e74c3c); color: white; }
+</style>
+</head>
+<body>
+<!-- Top Navigation Bar -->
+<nav class="topbar">
+  <h1><i class="fas fa-hospital"></i> Reception Dashboard</h1>
+  <div class="links">
+    <a href="/reception"><i class="fas fa-desktop"></i> Reception</a>
+    <a href="/department"><i class="fas fa-building"></i> Departments</a>
+    <a href="/checkin"><i class="fas fa-qrcode"></i> Kiosk Check-in</a>
+    <a href="/doctor-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <!-- KPI Stats Grid -->
+  <div class="stats-grid">
+    <div class="kpi-card kpi-card-primary animate-fadeInUp delay-1">
+      <div class="num">{{ today_appointments|length }}</div>
+      <div class="lbl">Today's Appointments</div>
+    </div>
+    <div class="kpi-card kpi-card-success animate-fadeInUp delay-2">
+      <div class="num">{{ checkins|length }}</div>
+      <div class="lbl">Checked-in Today</div>
+    </div>
+    <div class="kpi-card kpi-card-warning animate-fadeInUp delay-3">
+      <div class="num" id="waitingCount">--</div>
+      <div class="lbl">Waiting Patients</div>
+    </div>
+    <div class="kpi-card kpi-card-royal animate-fadeInUp delay-4">
+      <div class="num">{{ departments|length }}</div>
+      <div class="lbl">Active Departments</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <!-- Quick Check-in Card -->
+      <div class="card card-elevated animate-fadeInUp delay-1">
+        <div class="card-header">
+          <h3><i class="fas fa-user-plus"></i> Quick Check-in</h3>
+        </div>
+        <div class="card-body">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="q" placeholder="Search by name / phone / ID / email..."
+                   onkeyup="searchPatients(this.value)" autocomplete="off">
+          </div>
+          <div id="results"></div>
+
+          <div id="checkinForm" style="display:none; margin-top:20px; padding-top:20px; border-top: 1px solid rgba(201, 162, 39, 0.1);">
+            <div class="row" style="gap: 12px;">
+              <select id="method" class="form-control-pro select-pro" style="min-width: 160px;">
+                <option value="manual">Manual Check-in</option>
+                <option value="qr">QR Token</option>
+              </select>
+              <input type="text" id="appointmentId" class="form-control-pro" placeholder="Appointment ID (optional)" style="min-width: 180px;">
+              <select id="walkinDept" class="form-control-pro select-pro" style="min-width: 200px;">
+                <option value="">Regular (no dept)</option>
+                {% for d in departments %}<option value="{{ d.department_id }}">{{ d.name }} (walk-in)</option>{% endfor %}
+              </select>
+              <input type="text" id="qrToken" class="form-control-pro" placeholder="QR token (if QR method)" style="min-width: 180px;">
+              <button onclick="doCheckin()" class="btn-pro btn-pro-primary"><i class="fas fa-check"></i> Check-In Patient</button>
+              <button onclick="resetForm()" class="btn-pro btn-pro-ghost"><i class="fas fa-times"></i> Clear</button>
+            </div>
+            <div id="checkinResult"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Check-ins & Routing Card -->
+      <div class="card card-elevated animate-fadeInUp delay-2">
+        <div class="card-header">
+          <h3><i class="fas fa-clipboard-list"></i> Today's Check-ins & Routing</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Patient</th>
+                  <th>Department</th>
+                  <th>Method</th>
+                  <th>Token</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in checkins %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ c.patient_name or c.patient_id }}</td>
+                  <td>{{ c.department_name or '-' }}</td>
+                  <td>{{ c.checkin_method }}</td>
+                  <td><b>{{ c.token_code or '-' }}</b></td>
+                  <td>
+                    <span class="chip {% if c.checkin_status == 'checked_in' %}chip-success{% else %}chip-warning{% endif %}">
+                      {{ c.checkin_status }}
+                    </span>
+                  </td>
+                  <td>{{ c.checkin_time }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="7" class="empty-state" style="padding: 30px;">
+                    <i class="fas fa-clipboard"></i>
+                    <h3>No Check-ins Today</h3>
+                    <p>Patients will appear here once they check in.</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Routing Decisions Card -->
+      <div class="card card-elevated animate-fadeInUp delay-3">
+        <div class="card-header">
+          <h3><i class="fas fa-route"></i> Recent Routing Decisions</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rule</th>
+                  <th>Patient</th>
+                  <th>Department</th>
+                  <th>Queue</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in routing_logs %}
+                <tr>
+                  <td><b>{{ r.rule_id or '-' }}</b></td>
+                  <td>{{ r.patient_name or r.patient_id }}</td>
+                  <td>{{ r.department_name or '-' }}</td>
+                  <td><span class="badge badge-primary">{{ r.queue_category }}</span></td>
+                  <td>{{ r.decision_reason[:70] }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="5" class="empty-state" style="padding: 30px;">
+                    <i class="fas fa-route"></i>
+                    <h3>No Routing Decisions</h3>
+                    <p>Routing decisions will appear here.</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Departments Card -->
+      <div class="card card-elevated animate-fadeInUp delay-1">
+        <div class="card-header">
+          <h3><i class="fas fa-building"></i> Departments</h3>
+        </div>
+        <div class="card-body">
+          {% for d in departments %}
+          <div class="result-item" onclick="location.href='/department/{{ d.department_id }}'">
+            <i class="fas fa-hospital" style="color: var(--secondary); font-size: 1.2rem;"></i>
+            <div style="flex: 1;">
+              <div class="result-item-name">{{ d.name }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">{{ d.operating_hours }}</div>
+            </div>
+            <i class="fas fa-chevron-right" style="color: var(--text-muted);"></i>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Alerts Card -->
+      {% if routing_logs %}
+      <div class="card card-elevated animate-fadeInUp delay-2 card-gold-accent">
+        <div class="card-header">
+          <h3><i class="fas fa-bell"></i> Alerts</h3>
+        </div>
+        <div class="card-body">
+          {% for r in routing_logs %}
+          {% if r.queue_category == 'walkin' %}
+          <div class="result-item" style="background: rgba(243, 156, 18, 0.05); border-color: rgba(243, 156, 18, 0.2);">
+            <i class="fas fa-user-plus" style="color: var(--warning);"></i>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: var(--text-primary);">{{ r.patient_name }}</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">Walk-in patient → {{ r.department_name }}</div>
+            </div>
+            <span class="chip chip-warning">Walk-in</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="flash"></div>
+
+<script>
+  var CSRF = {{ csrf_token|tojson }};
+  var selectedPatient = null;
+
+  function searchPatients(q) {
+    if (!q || q.length < 2) { document.getElementById('results').innerHTML = ''; return; }
+    document.getElementById('results').innerHTML = '<div style="color:var(--text-muted);font-size:.8rem;padding:10px;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+    fetch('/api/checkin/search?q=' + encodeURIComponent(q)).then(r => r.json()).then(d => {
+      var box = document.getElementById('results');
+      if (!d.results.length) { box.innerHTML = '<div style="color:var(--text-muted);font-size:.8rem;padding:10px;"><i class="fas fa-user-slash"></i> No patients found.</div>'; return; }
+      box.innerHTML = d.results.map(p =>
+        '<div class="result-item" onclick="pickPatient(' + p.patient_id + ', \'' + (p.name || '').replace(/'/g, "\\'") + '\')">' +
+        '<i class="fas fa-user" style="color: var(--primary);"></i>' +
+        '<div style="flex: 1;"><div class="result-item-name">' + (p.name || '') + '</div>' +
+        '<div style="font-size: 0.75rem; color: var(--text-muted);">ID: ' + p.patient_id + ' | ' + (p.phone || '') + '</div></div>' +
+        '<i class="fas fa-chevron-right" style="color: var(--text-muted);"></i></div>'
+      ).join('');
+    });
+  }
+
+  function pickPatient(id, name) {
+    selectedPatient = id;
+    document.getElementById('q').value = name;
+    document.getElementById('checkinForm').style.display = 'block';
+    document.getElementById('checkinResult').innerHTML = '';
+  }
+
+  function resetForm() {
+    selectedPatient = null;
+    document.getElementById('q').value = '';
+    document.getElementById('checkinForm').style.display = 'none';
+    document.getElementById('checkinResult').innerHTML = '';
+  }
+
+  function doCheckin() {
+    if (!selectedPatient) { alert('Search and select a patient first.'); return; }
+    var body = {
+      patient_id: selectedPatient,
+      csrf_token: CSRF,
+      method: document.getElementById('method').value,
+      appointment_id: document.getElementById('appointmentId').value || null,
+      walkin_department_id: document.getElementById('walkinDept').value || null,
+      qr_token: document.getElementById('qrToken').value || null
+    };
+    var out = document.getElementById('checkinResult');
+    out.innerHTML = '<div style="color:var(--text-secondary);"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+    fetch('/api/checkin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) })
+      .then(r => r.json()).then(d => {
+        if (d.success && d.token) {
+          out.innerHTML = '<div class="flash-toast success" style="position:static; animation:none; margin-top:10px;"><i class="fas fa-check-circle"></i> Check-in OK — ' + (d.department || '') + ' · Token <b>' + (d.token.token_code || '') + '</b> · Est wait ~' + (d.est_wait_min || 0) + ' min' + (d.duplicate ? ' (duplicate — existing check-in returned)' : '') + '</div>';
+        } else {
+          out.innerHTML = '<div class="flash-toast error" style="position:static; animation:none; margin-top:10px;"><i class="fas fa-times-circle"></i> ' + (d.message || 'Failed') + (d.reason ? '<br><small>' + d.reason + '</small>' : '') + '</div>';
+        }
+        setTimeout(() => location.reload(), 1200);
+      });
+  }
+
+  // Poll live events + refresh queue preview
+  var lastSeq = 0;
+  setInterval(function () {
+    fetch('/api/realtime/events?after=' + lastSeq).then(r => r.json()).then(d => {
+      if (d.events && d.events.length) { lastSeq = d.events[d.events.length - 1].seq; }
+    }).catch(function(){});
+    fetch('/api/analytics-summary-lite').catch(function(){});
+  }, 4000);
+
+  function flash(msg, err) {
+    var f = document.getElementById('flash');
+    f.textContent = msg;
+    f.className = err ? 'flash-toast error' : 'flash-toast success';
+    f.style.display = 'flex';
+    setTimeout(() => f.style.display = 'none', 3000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Subway Runner - Smart Hospital Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h1>SUBWAY RUNNER</h1>
+            <p class="subtitle">Endless Runner Game</p>
+            <button id="start-btn" class="btn">TAP TO START</button>
+            <div class="controls-info">
+                <div class="control-row">
+                    <span class="key">←</span><span class="key">→</span>
+                    <span>Move Left/Right</span>
+                </div>
+                <div class="control-row">
+                    <span class="key">↑</span>
+                    <span>Jump</span>
+                </div>
+                <div class="control-row">
+                    <span class="key">↓</span>
+                    <span>Slide</span>
+                </div>
+                <div class="control-row">
+                    <span class="key">SPACE</span>
+                    <span>Jump / Pause</span>
+                </div>
+            </div>
+            <div class="mobile-controls-hint">Swipe Left/Right to move • Swipe Up to jump • Swipe Down to slide</div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen hidden">
+            <h2>PAUSED</h2>
+            <p>Score: <span id="pause-score">0</span></p>
+            <button id="resume-btn" class="btn">RESUME</button>
+            <button id="quit-btn" class="btn secondary">QUIT</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Distance: <span id="final-distance">0</span>m</p>
+            <p>Coins: <span id="final-coins">0</span></p>
+            <div class="btn-group">
+                <button id="retry-btn" class="btn">PLAY AGAIN</button>
+                <button id="menu-btn" class="btn secondary">MAIN MENU</button>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-item">
+                <span class="hud-label">SCORE</span>
+                <span id="score" class="hud-value">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">DISTANCE</span>
+                <span id="distance" class="hud-value">0m</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">COINS</span>
+                <span id="coins" class="hud-value">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">LIVES</span>
+                <div id="lives" class="lives-display"></div>
+            </div>
+            <button id="pause-btn" class="pause-btn" aria-label="Pause">⏸</button>
+        </div>
+
+        <!-- Mobile touch controls -->
+        <div id="mobile-controls" class="hidden">
+            <div class="touch-control left" data-action="left"></div>
+            <div class="touch-control right" data-action="right"></div>
+            <div class="touch-control jump" data-action="jump"></div>
+            <div class="touch-control slide" data-action="slide"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>

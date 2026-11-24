@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics | Admin</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  body { background:#f4f7fb; font-family:'Inter',system-ui,sans-serif; margin:0; color:#0f172a; }
+  .topbar { background:#0f172a; color:#fff; padding:14px 24px; display:flex; justify-content:space-between; }
+  .topbar a { color:#c9a227; text-decoration:none; margin-left:14px; font-size:.85rem; }
+  .wrap { max-width:1150px; margin:22px auto; padding:0 16px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { background:#fff; border-radius:14px; padding:16px; box-shadow:0 3px 12px rgba(15,23,42,.06); text-align:center; }
+  .kpi .n { font-size:1.5rem; font-weight:700; }
+  .kpi .t { font-size:.72rem; color:#64748b; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
+  .card { background:#fff; border-radius:14px; padding:16px; box-shadow:0 3px 12px rgba(15,23,42,.06); }
+  .card h3 { margin:0 0 10px; font-size:.95rem; }
+  .bar { height:22px; border-radius:8px; background:#e2e8f0; margin:4px 0; overflow:hidden; }
+  .bar > div { height:100%; background:linear-gradient(90deg,#0f172a,#c9a227); color:#fff; font-size:.7rem; line-height:22px; padding-left:8px; }
+  table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  th,td { text-align:left; padding:6px; border-bottom:1px solid #eef2f7; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><b>Hospital Analytics</b></div>
+  <div><a href="/admin/departments">Departments</a><a href="/admin/train">Training</a><a href="/admin-logout">Logout</a></div>
+</div>
+<div class="wrap">
+  <div class="kpis" id="kpis"><div class="kpi"><div class="n">…</div><div class="t">Loading</div></div></div>
+
+  <div class="grid">
+    <div class="card"><h3>Department Workload (today)</h3><div id="deptChart"></div></div>
+    <div class="card"><h3>Daily Check-ins (7 days)</h3><canvas id="checksChart" height="180"></canvas></div>
+    <div class="card"><h3>Weekly Appointments (7 days)</h3><canvas id="apptsChart" height="180"></canvas></div>
+    <div class="card">
+      <h3>Waiting / Performance</h3>
+      <div id="callStats" style="font-size:.9rem;"></div>
+      <h3 style="margin-top:14px;">Routing Rules</h3>
+      <table>
+        <tr><th>Rule</th><th>Status</th></tr>
+        {% for r in rules %}<tr><td>{{ r.rule_code }} — {{ r.name }}</td><td>{{ 'ON' if r.is_active else 'OFF' }}</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  function fmtDate(d) { return d; }
+  async function get(url) { const r = await fetch(url); return r.json(); }
+
+  async function load() {
+    const s = await get('/api/analytics/summary');
+    if (s.success) {
+      document.getElementById('kpis').innerHTML = [
+        ['Total Patients', s.total_patients], ['Today Appointments', s.today_appointments],
+        ['Today Check-ins', s.today_checkins], ['Waiting', s.waiting_patients],
+        ['Completed', s.completed_consultations], ['Walk-ins', s.walkins_today]
+      ].map(([t,n]) => '<div class="kpi"><div class="n">'+n+'</div><div class="t">'+t+'</div></div>').join('');
+    }
+
+    const d = await get('/api/analytics/department-workload');
+    if (d.success) {
+      document.getElementById('deptChart').innerHTML = d.departments.map(x =>
+        '<div style="font-size:.75rem;color:#64748b;">' + x.name + ' (' + x.today_tokens + '/' + x.capacity_per_day + ')</div>' +
+        '<div class="bar"><div style="width:' + Math.min(100, x.load_pct) + '%">' + x.waiting + ' waiting</div></div>'
+      ).join('') || '<div style="color:#94a3b8;">No data.</div>';
+    }
+
+    const c = await get('/api/analytics/checks');
+    if (c.success) chart('checksChart', 'Check-ins', c.data);
+
+    const a = await get('/api/analytics/appointments');
+    if (a.success) chart('apptsChart', 'Appointments', a.data);
+
+    const cs = await get('/api/analytics/calls');
+    if (cs.success) {
+      document.getElementById('callStats').innerHTML =
+        '<p>Avg time to being called: <b>' + cs.stats.avg_call_wait_min + '</b> min</p>' +
+        '<p>Avg consultation: <b>' + cs.stats.avg_consult_min + '</b> min</p>';
+    }
+  }
+
+  function chart(id, label, data) {
+    new Chart(document.getElementById(id), { type: 'line',
+      data: { labels: data.map(x => x.date), datasets: [{ label: label, data: data.map(x => x.count), borderColor: '#0f172a', backgroundColor: 'rgba(201,162,39,.25)', fill: true, tension: .3 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+  }
+
+  load();
+  setInterval(load, 30000);
+</script>
+</body>
+</html>

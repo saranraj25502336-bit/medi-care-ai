@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff / Doctor Login | MediCare AI Hospital</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+         background: radial-gradient(ellipse at top, #1b2a4a 0%, #0c1226 60%, #080d1c 100%); color: #eaf0ff; }
+  .shell { width: 100%; max-width: 400px; }
+  .topline { text-align: center; margin-bottom: 26px; }
+  .topline .badge { display:inline-block; font-size:.68rem; letter-spacing: 2.5px; color:#c9a227; border:1px solid rgba(201,162,39,.4); padding:5px 14px; border-radius:50px; margin-bottom:14px; text-transform: uppercase; }
+  .topline h1 { font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing:.3px; }
+  .topline p { color: #8494b8; font-size:.8rem; margin-top:6px; }
+  .card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10); border-radius: 18px; padding: 30px 26px;
+          box-shadow: 0 20px 50px rgba(0,0,0,.45); backdrop-filter: blur(6px); }
+  label { display:block; font-size:.72rem; font-weight:700; letter-spacing:1px; text-transform: uppercase; color:#9fb0d4; margin:16px 0 7px; }
+  .field { display:flex; align-items:center; border:1px solid rgba(255,255,255,.14); border-radius: 11px; padding: 0 12px; background: rgba(8,13,28,.6); transition:.2s; }
+  .field:focus-within { border-color:#c9a227; box-shadow: 0 0 0 3px rgba(201,162,39,.15); }
+  .field i { color:#c9a227; margin-right:10px; font-size:.95rem; }
+  .field input { flex:1; background:transparent; border:none; outline:none; padding: 13px 0; color:#fff; font-size:.95rem; width:100%; }
+  .btn { width:100%; padding: 14px; border:none; border-radius: 11px; margin-top:22px; font-size: .95rem; font-weight: 800; cursor:pointer; letter-spacing:.4px;
+         background: linear-gradient(135deg,#c9a227,#e3c465); color:#0c1226; box-shadow: 0 10px 26px rgba(201,162,39,.28); transition:.2s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 14px 32px rgba(201,162,39,.38); }
+  .hint { margin-top: 16px; text-align:center; font-size:.74rem; color:#5d6f96; }
+  .hint b { color:#c9a227; }
+  .alert { padding:10px; border-radius: 9px; font-size:.8rem; margin-top:14px; display:none; }
+  .alert.ok { display:block; background: rgba(22,163,74,.15); color:#6fe0a0; border:1px solid rgba(34,197,94,.3); }
+  .alert.err { display:block; background: rgba(220,38,38,.12); color:#ff9d9d; border:1px solid rgba(239,68,68,.3); }
+  .links { margin-top: 20px; text-align:center; font-size:.78rem; }
+  .links a { color:#9fb0d4; text-decoration:none; margin: 0 8px; }
+  .links a:hover { color:#c9a227; }
+  .bar { height:3px; margin: 18px auto 0; width: 46px; border-radius: 3px; background: linear-gradient(90deg,#c9a227, transparent); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topline">
+    <div class="badge">Staff Access Only</div>
+    <h1>MediCare Doctor Console</h1>
+    <p>Authorised medical staff sign-in · Clinical dashboard & queue</p>
+  </div>
+
+  <div class="card">
+    <label>Doctor ID</label>
+    <div class="field">
+      <i>⌀</i>
+      <input type="number" id="did" placeholder="e.g. 1" min="1">
+    </div>
+
+    <label>Password</label>
+    <div class="field">
+      <i>🔒</i>
+      <input type="password" id="dpw" placeholder="Your personal password">
+    </div>
+
+    <div class="alert" id="alert"></div>
+    <button class="btn" onclick="dlog()">UNLOCK CONSOLE</button>
+    <div class="hint">Contact the administrator if you forgot your password.</div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="links">
+    <a href="/">← Home</a>
+    <a href="/patient-login">Patient Portal</a>
+    <a href="/admin-login">Admin</a>
+  </div>
+</div>
+
+<script>
+  function dlog() {
+    var el = document.getElementById('alert');
+    var id = document.getElementById('did').value.trim();
+    var pw = document.getElementById('dpw').value;
+    if (!id || !pw) { el.textContent = 'Enter your Doctor ID and password.'; el.className = 'alert err'; return; }
+    el.textContent = 'Authenticating…'; el.className = 'alert ok';
+    fetch('/doctor-login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ doctor_id: id, password: pw }) })
+      .then(r=>r.json()).then(d => {
+        if (d.success) { el.textContent = 'Welcome Dr. ' + (d.name || '') + ' — redirecting…'; setTimeout(()=>location.href='/doctor', 700); }
+        else { el.textContent = d.message || 'Login failed.'; el.className = 'alert err'; }
+      }).catch(()=>{ el.textContent = 'Connection error.'; el.className = 'alert err'; });
+  }
+  document.getElementById('dpw').addEventListener('keydown', e => { if (e.key === 'Enter') dlog(); });
+</script>
+</body>
+</html>

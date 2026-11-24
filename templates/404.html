@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+<body>
+    <div class="error-page">
+        <div class="error-container animate-scaleIn">
+            <div class="error-icon red">
+                <i class="fas fa-face-frown"></i>
+            </div>
+            <div class="error-code">404</div>
+            <h2 class="error-title">Page Not Found</h2>
+            <p class="error-message">The page you're looking for doesn't exist or has been moved. Let's get you back on track.</p>
+            <a href="/" class="error-btn">
+                <i class="fas fa-home"></i> Go Home
+            </a>
+        </div>
+    </div>
+</body>
+</html>

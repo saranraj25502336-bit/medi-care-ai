@@ -1,0 +1,30 @@
+﻿# Production dependencies - pinned exact versions
+# All packages verified on PyPI (Nov 2026)
+# Compatible with Python 3.12+
+
+Flask==3.1.3
+mysql-connector-python==9.7.0
+opencv-python==4.10.0.84
+numpy==2.5.1
+Pillow==12.3.0
+requests==2.34.2
+gunicorn==26.0.0
+
+# AI Face Recognition (InsightFace + ArcFace)
+insightface==1.0.1
+onnxruntime==1.28.0
+
+python-dotenv==1.0.1
+flask-limiter==3.9.0
+bcrypt==4.3.0
+redis==5.0.1
+
+# Smart check-in / QR
+qrcode[pil]==8.2
+flask-socketio==5.5.1
+# Optional real-time worker: eventlet==0.41.0
+
+# Testing
+pytest==8.4.1
+pytest-cov==6.0.0
+pytest-mock==3.14.0

@@ -1,0 +1,44 @@
+[Unit]
+Description=Smart Hospital Management System
+After=network.target mysql.service redis.service
+Wants=mysql.service redis.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/smart-hospital
+Environment=PATH=/opt/smart-hospital/venv/bin
+EnvironmentFile=/opt/smart-hospital/.env
+ExecStart=/opt/smart-hospital/venv/bin/gunicorn \
+    --worker-class eventlet \
+    -w 1 \
+    --bind 0.0.0.0:5000 \
+    --access-logfile /var/log/smart-hospital/access.log \
+    --error-logfile /var/log/smart-hospital/error.log \
+    --log-level info \
+    --timeout 60 \
+    --keep-alive 5 \
+    app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/smart-hospital/static/uploads /opt/smart-hospital/face_encodings /var/log/smart-hospital
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+# Resource limits
+LimitNOFILE=65535
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

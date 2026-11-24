@@ -1,0 +1,23 @@
+/var/log/smart-hospital/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data www-data
+    sharedscripts
+    postrotate
+        systemctl reload smart-hospital > /dev/null 2>&1 || true
+    endscript
+}
+
+/opt/smart-hospital/logs/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data www-data
+}

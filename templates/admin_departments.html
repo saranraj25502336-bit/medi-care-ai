@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Departments | Admin</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+  body { background:#f4f7fb; font-family:'Inter',system-ui,sans-serif; margin:0; color:#0f172a; }
+  .topbar { background:#0f172a; color:#fff; padding:14px 24px; display:flex; justify-content:space-between; }
+  .topbar a { color:#c9a227; text-decoration:none; margin-left:14px; font-size:.85rem; }
+  .wrap { max-width:1100px; margin:22px auto; padding:0 16px; }
+  .card { background:#fff; border-radius:14px; padding:18px; box-shadow:0 3px 12px rgba(15,23,42,.06); margin-bottom:16px; }
+  table { width:100%; border-collapse:collapse; font-size:.84rem; }
+  th,td { text-align:left; padding:8px 6px; border-bottom:1px solid #eef2f7; }
+  input,select,textarea,button { padding:8px 10px; border-radius:10px; border:1px solid #cbd5e1; font-size:.83rem; font-family:inherit; }
+  button { background:#0f172a; color:#fff; border:none; cursor:pointer; }
+  button.g { background:#15803d; } button.r { background:#b91c1c; } button.y { background:#c9a227; color:#0f172a; }
+  .switch { cursor:pointer; }
+  #msg { position:fixed; top:14px; right:14px; background:#15803d; color:#fff; padding:10px 16px; border-radius:10px; display:none; z-index:99; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><b>Department Management</b></div>
+  <div><a href="/admin/analytics">Analytics</a><a href="/admin/train">Training</a><a href="/admin-logout">Logout</a></div>
+</div>
+<div id="msg"></div>
+<div class="wrap">
+  <div class="card">
+    <h3 style="margin:0 0 10px;">Add Department</h3>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <input id="nName" placeholder="Name">
+      <input id="nHours" placeholder="Hours (09:00-18:00)" value="09:00-18:00">
+      <input id="nCap" type="number" placeholder="Capacity/day" value="50">
+      <input id="nDesc" placeholder="Description" style="flex:1; min-width:200px;">
+      <button onclick="addDept()">+ Add</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px;">Departments</h3>
+    <table>
+      <tr><th>ID</th><th>Name</th><th>Hours</th><th>Capacity</th><th>Doctors</th><th>Active</th><th>Save</th></tr>
+      {% for d in departments %}
+      <tr data-id="{{ d.department_id }}">
+        <td>{{ d.department_id }}</td>
+        <td><input id="name{{ d.department_id }}" value="{{ d.name }}"></td>
+        <td><input id="hrs{{ d.department_id }}" value="{{ d.operating_hours }}"></td>
+        <td><input id="cap{{ d.department_id }}" type="number" value="{{ d.capacity_per_day }}"></td>
+        <td>
+          <select id="assign{{ d.department_id }}" onchange="assignDoc({{ d.department_id }}, this.value, this.options[this.selectedIndex].getAttribute('data-act'))">
+            <option value="">—</option>
+            {% for doc in all_doctors %}
+            {% set ass = d.doctors|selectattr('doctor_id','equalto',doc.doctor_id)|list %}
+            <option value="{{ doc.doctor_id }}" data-act="{{ 'remove' if ass else 'assign' }}" {{ 'selected' if ass else '' }}>{{ doc.name }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td><label><input id="act{{ d.department_id }}" type="checkbox" class="switch" {{ 'checked' if d.is_active else '' }}> Active</label></td>
+        <td><button class="g" onclick="saveDept({{ d.department_id }})">Save</button></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px;">Routing Rules (enable / disable)</h3>
+    <table>
+      <tr><th>Code</th><th>Name</th><th>Priority</th><th>Active</th></tr>
+      {% for r in rules %}
+      <tr>
+        <td><b>{{ r.rule_code }}</b></td>
+        <td>{{ r.name }}</td>
+        <td>{{ r.priority }}</td>
+        <td><label><input type="checkbox" class="switch" id="rule{{ r.rule_id }}" {{ 'checked' if r.is_active else '' }} onchange="toggleRule({{ r.rule_id }}, this.checked)"> Active</label></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+<script>
+  var CSRF = {{ csrf_token|tojson }};
+  function flash(m, err) { var f=document.getElementById('msg'); f.textContent=m; f.style.background=err?'#b91c1c':'#15803d'; f.style.display='block'; setTimeout(()=>f.style.display='none',2500); }
+  function post(url, body, cb) { fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({csrf_token: CSRF}, body))}).then(r=>r.json()).then(d=>{ if(d.success){ flash('Saved'); } else { flash(d.message||'Failed', true); } if(cb) cb(d); }); }
+  function addDept() {
+    post('/api/admin/departments', { name: document.getElementById('nName').value, operating_hours: document.getElementById('nHours').value, capacity_per_day: document.getElementById('nCap').value, description: document.getElementById('nDesc').value }, () => setTimeout(()=>location.reload(), 800));
+  }
+  function saveDept(id) {
+    post('/api/admin/departments/' + id + '/update', { name: document.getElementById('name'+id).value, operating_hours: document.getElementById('hrs'+id).value, capacity_per_day: document.getElementById('cap'+id).value, description: '', is_active: document.getElementById('act'+id).checked ? 1 : 0 });
+  }
+  function assignDoc(deptId, docId, act) {
+    if (!docId) return;
+    post('/api/admin/departments/' + deptId + '/doctors', { doctor_id: docId, assign: act === 'assign' });
+  }
+  function toggleRule(ruleId, active) {
+    post('/api/admin/rules', { rule_id: ruleId, is_active: active ? 1 : 0 });
+  }
+</script>
+</body>
+</html>

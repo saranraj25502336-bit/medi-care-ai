@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare AI - Smart Hospital System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+
+<body>
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+        <div class="top-nav-container">
+            <div class="top-nav-left">
+                <span><i class="fas fa-phone-alt"></i> Emergency: +91-1800-123-4567</span>
+                <span><i class="fas fa-envelope"></i> promo@medicareai.com</span>
+                <span><i class="fas fa-clock"></i> 24/7 Service</span>
+            </div>
+            <div class="top-nav-right">
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; margin-left: 12px;"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; margin-left: 12px;"><i class="fab fa-twitter"></i></a>
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; margin-left: 12px;"><i class="fab fa-instagram"></i></a>
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; margin-left: 12px;"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <nav class="main-navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <div class="logo-icon"><i class="fas fa-hospital"></i></div>
+                <div class="logo-text">
+                    <span class="logo-title">MediCare AI</span>
+                    <span class="logo-subtitle">Smart Hospital System</span>
+                </div>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/" class="active"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#services"><i class="fas fa-stethoscope"></i> Services</a></li>
+                <li><a href="#doctors"><i class="fas fa-user-md"></i> Doctors</a></li>
+                <li><a href="/find-patient"><i class="fas fa-search"></i> Find Patient</a></li>
+                <li><a href="#about"><i class="fas fa-info-circle"></i> About</a></li>
+                <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+                <li class="nav-dropdown">
+                    <a href="#"><i class="fas fa-sign-in-alt"></i> Login <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" onclick="openLogin('patient')"><i class="fas fa-user"></i> Patient Login</a></li>
+                        <li><a href="#" onclick="openLogin('doctor')"><i class="fas fa-user-md"></i> Doctor Login</a></li>
+                        <li><a href="/admin-login"><i class="fas fa-user-shield"></i> Admin Login</a></li>
+                    </ul>
+                </li>
+                <li><a href="/register" class="nav-cta"><i class="fas fa-user-plus"></i> Register</a></li>
+            </ul>
+            <div class="nav-toggle" onclick="toggleNav()">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="particles-bg"></div>
+        <div class="hero-content">
+            <div class="hero-text animate-fadeInLeft">
+                <div class="hero-badge"><i class="fas fa-robot"></i> AI-Powered Healthcare</div>
+                <h1>Your Health, <span class="highlight-text">Our Priority</span></h1>
+                <p>Experience the future of healthcare with AI-powered diagnostics, face recognition login, and seamless appointment booking.</p>
+                <div class="hero-buttons">
+                    <a href="/register" class="btn btn-primary btn-lg"><i class="fas fa-user-plus"></i> Register Now</a>
+                    <a href="#" onclick="openLogin('patient')" class="btn btn-outline-light btn-lg"><i class="fas fa-sign-in-alt"></i> Patient Login</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat"><span class="stat-number">5000+</span><span class="stat-label">Patients</span></div>
+                    <div class="hero-stat"><span class="stat-number">50+</span><span class="stat-label">Doctors</span></div>
+                    <div class="hero-stat"><span class="stat-number">15+</span><span class="stat-label">Specialties</span></div>
+                    <div class="hero-stat"><span class="stat-number">98%</span><span class="stat-label">Satisfaction</span></div>
+                </div>
+            </div>
+            <div class="hero-visual animate-fadeInRight">
+                <div class="hero-image-wrapper">
+                    <div class="hero-image-content"><i class="fas fa-heartbeat"></i></div>
+                    <div class="floating-card card-1"><i class="fas fa-check-circle"></i> AI Diagnosis</div>
+                    <div class="floating-card card-2"><i class="fas fa-user-md"></i> Expert Doctors</div>
+                    <div class="floating-card card-3"><i class="fas fa-clock"></i> 24/7 Support</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section" id="services">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge"><i class="fas fa-stethoscope"></i> Our Services</div>
+                <h2>Comprehensive Healthcare Services</h2>
+                <p>We provide a wide range of medical services with cutting-edge technology and experienced professionals.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card animate-fadeInUp delay-1" onclick="showServiceDetail('AI Diagnostics', 'fas fa-brain', 'Our AI-powered diagnostic system uses advanced machine learning algorithms to analyze symptoms, medical history, and test results. It provides accurate preliminary diagnoses, helping doctors make informed decisions faster. The system continuously learns from new data to improve its accuracy.', ['Dr. Vikram Singh'])">
+                    <div class="service-icon"><i class="fas fa-brain"></i></div>
+                    <h3>AI Diagnostics</h3>
+                    <p>Advanced AI-powered diagnostic tools for accurate and quick health assessments.</p>
+                    <a href="#" class="service-link" onclick="event.stopPropagation(); showServiceDetail('AI Diagnostics', 'fas fa-brain', 'Our AI-powered diagnostic system uses advanced machine learning algorithms to analyze symptoms, medical history, and test results. It provides accurate preliminary diagnoses, helping doctors make informed decisions faster. The system continuously learns from new data to improve its accuracy.', ['Dr. Vikram Singh'])">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="service-card animate-fadeInUp delay-2" onclick="showServiceDetail('Cardiology', 'fas fa-heartbeat', 'Our cardiology department offers comprehensive heart care services including ECG, echocardiography, stress testing, angioplasty, and cardiac surgery. We have state-of-the-art cath labs and experienced cardiologists who provide 24/7 emergency cardiac care.', ['Dr. Rajesh Sharma'])">
+                    <div class="service-icon"><i class="fas fa-heartbeat"></i></div>
+                    <h3>Cardiology</h3>
+                    <p>Expert cardiac care with state-of-the-art equipment and experienced cardiologists.</p>
+                    <a href="#" class="service-link" onclick="event.stopPropagation(); showServiceDetail('Cardiology', 'fas fa-heartbeat', 'Our cardiology department offers comprehensive heart care services including ECG, echocardiography, stress testing, angioplasty, and cardiac surgery. We have state-of-the-art cath labs and experienced cardiologists who provide 24/7 emergency cardiac care.', ['Dr. Rajesh Sharma'])">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="service-card animate-fadeInUp delay-3" onclick="showServiceDetail('Neurology', 'fas fa-brain', 'Our neurology department specializes in diagnosis and treatment of brain, spine, and nervous system disorders. We offer advanced treatments for stroke, epilepsy, Parkinson\'s disease, multiple sclerosis, and more. Our neurosurgeons perform minimally invasive procedures.', ['Dr. Priya Patel'])">
+                    <div class="service-icon"><i class="fas fa-brain"></i></div>
+                    <h3>Neurology</h3>
+                    <p>Comprehensive neurological care for brain, spine, and nervous system disorders.</p>
+                    <a href="#" class="service-link" onclick="event.stopPropagation(); showServiceDetail('Neurology', 'fas fa-brain', 'Our neurology department specializes in diagnosis and treatment of brain, spine, and nervous system disorders. We offer advanced treatments for stroke, epilepsy, Parkinson\'s disease, multiple sclerosis, and more. Our neurosurgeons perform minimally invasive procedures.', ['Dr. Priya Patel'])">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="service-card animate-fadeInUp delay-4" onclick="showServiceDetail('Orthopedics', 'fas fa-bone', 'Our orthopedics department provides comprehensive care for bones, joints, muscles, and connective tissues. We specialize in joint replacement surgery, sports medicine, spine surgery, fracture care, and arthritis management with advanced robotic-assisted techniques.', ['Dr. Amit Verma'])">
+                    <div class="service-icon"><i class="fas fa-bone"></i></div>
+                    <h3>Orthopedics</h3>
+                    <p>Specialized care for bones, joints, and muscles with advanced surgical techniques.</p>
+                    <a href="#" class="service-link" onclick="event.stopPropagation(); showServiceDetail('Orthopedics', 'fas fa-bone', 'Our orthopedics department provides comprehensive care for bones, joints, muscles, and connective tissues. We specialize in joint replacement surgery, sports medicine, spine surgery, fracture care, and arthritis management with advanced robotic-assisted techniques.', ['Dr. Amit Verma'])">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="service-card animate-fadeInUp delay-5" onclick="showServiceDetail('Pediatrics', 'fas fa-baby', 'Our pediatrics department is dedicated to the health and well-being of infants, children, and adolescents. We provide preventive care, vaccinations, developmental screenings, treatment of childhood illnesses, and specialized pediatric emergency services in a child-friendly environment.', ['Dr. Sunita Reddy'])">
+                    <div class="service-icon"><i class="fas fa-baby"></i></div>
+                    <h3>Pediatrics</h3>
+                    <p>Dedicated healthcare for infants, children, and adolescents with compassionate care.</p>
+                    <a href="#" class="service-link" onclick="event.stopPropagation(); showServiceDetail('Pediatrics', 'fas fa-baby', 'Our pediatrics department is dedicated to the health and well-being of infants, children, and adolescents. We provide preventive care, vaccinations, developmental screenings, treatment of childhood illnesses, and specialized pediatric emergency services in a child-friendly environment.', ['Dr. Sunita Reddy'])">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="service-card animate-fadeInUp delay-6" onclick="showServiceDetail('Ophthalmology', 'fas fa-eye', 'Our ophthalmology department offers complete eye care services from routine vision tests to advanced eye surgeries. We specialize in cataract surgery, LASIK, glaucoma treatment, retinal disorders, and pediatric ophthalmology using the latest diagnostic and surgical equipment.', ['Dr. Ananya Gupta'])">
+                    <div class="service-icon"><i class="fas fa-eye"></i></div>
+                    <h3>Ophthalmology</h3>
+                    <p>Complete eye care services from routine checkups to advanced eye surgeries.</p>
+                    <a href="#" class="service-link" onclick="event.stopPropagation(); showServiceDetail('Ophthalmology', 'fas fa-eye', 'Our ophthalmology department offers complete eye care services from routine vision tests to advanced eye surgeries. We specialize in cataract surgery, LASIK, glaucoma treatment, retinal disorders, and pediatric ophthalmology using the latest diagnostic and surgical equipment.', ['Dr. Ananya Gupta'])">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctors Section -->
+    <section class="doctors-section" id="doctors">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge"><i class="fas fa-user-md"></i> Our Specialists</div>
+                <h2>Meet Our Expert Doctors</h2>
+                <p>Our team of highly qualified specialists is dedicated to providing you with the best medical care.</p>
+            </div>
+            <div class="doctors-grid">
+                {% for doctor in doctors %} {% set doc_json = doctor|tojson %}
+                <div class="doctor-card animate-fadeInUp delay-{{ loop.index }}" onclick="showDoctorProfile({{ doc_json }})">
+                    <div class="doctor-image">
+                        <img class="doctor-avatar-img" src="https://ui-avatars.com/api/?name={{ doctor.name | replace(' ', '+') }}&background=121c5e&color=fff&size=80&bold=true" alt="{{ doctor.name }}">
+                    </div>
+                    <div class="doctor-info">
+                        <h3>{{ doctor.name }}</h3>
+                        <span class="doctor-spec">{{ doctor.specialization }}</span>
+                        <div class="doctor-rating">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                            <span style="color: var(--text-secondary); font-size: 0.72rem; margin-left: 4px;">(4.8)</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="services-section" id="about">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge"><i class="fas fa-info-circle"></i> About Us</div>
+                <h2>Leading Healthcare Innovation</h2>
+                <p>MediCare AI combines cutting-edge technology with compassionate care to deliver exceptional healthcare experiences.</p>
+            </div>
+            <div class="grid-3">
+                <div class="card animate-fadeInUp delay-1">
+                    <div class="card-body text-center">
+                        <div class="service-icon" style="margin: 0 auto 16px; width: 60px; height: 60px; font-size: 28px;"><i class="fas fa-award"></i></div>
+                        <h3>15+ Years Experience</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem;">Trusted by thousands of patients with over 15 years of excellence in healthcare.</p>
+                    </div>
+                </div>
+                <div class="card animate-fadeInUp delay-2">
+                    <div class="card-body text-center">
+                        <div class="service-icon" style="margin: 0 auto 16px; width: 60px; height: 60px; font-size: 28px;"><i class="fas fa-users"></i></div>
+                        <h3>Expert Medical Team</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem;">Our team of 50+ specialist doctors ensures you get the best care possible.</p>
+                    </div>
+                </div>
+                <div class="card animate-fadeInUp delay-3">
+                    <div class="card-body text-center">
+                        <div class="service-icon" style="margin: 0 auto 16px; width: 60px; height: 60px; font-size: 28px;"><i class="fas fa-robot"></i></div>
+                        <h3>AI-Powered Care</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem;">Leveraging artificial intelligence for accurate diagnostics and personalized treatment.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="doctors-section" id="contact">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge"><i class="fas fa-envelope"></i> Contact Us</div>
+                <h2>Get In Touch</h2>
+                <p>Have questions? We're here to help. Reach out to us anytime.</p>
+            </div>
+            <div class="grid-2">
+                <div class="card animate-fadeInLeft">
+                    <div class="card-body">
+                        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-map-marker-alt" style="color: var(--secondary);"></i> Our Location</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 12px;"><i class="fas fa-building" style="width: 20px; color: var(--secondary);"></i> 123 Healthcare Avenue</p>
+                        <p style="color: var(--text-secondary); margin-bottom: 12px;"><i class="fas fa-city" style="width: 20px; color: var(--secondary);"></i> Medical District, New Delhi</p>
+                        <p style="color: var(--text-secondary); margin-bottom: 12px;"><i class="fas fa-phone" style="width: 20px; color: var(--secondary);"></i> +91-1800-123-4567</p>
+                        <p style="color: var(--text-secondary);"><i class="fas fa-envelope" style="width: 20px; color: var(--secondary);"></i> info@medicareai.com</p>
+                    </div>
+                </div>
+                <div class="card animate-fadeInRight">
+                    <div class="card-body">
+                        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-clock" style="color: var(--secondary);"></i> Working Hours</h3>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eef2fe;"><span style="color: var(--text-secondary);">Monday - Friday</span><span style="font-weight: 600;">8:00 AM - 8:00 PM</span></div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eef2fe;"><span style="color: var(--text-secondary);">Saturday</span><span style="font-weight: 600;">9:00 AM - 6:00 PM</span></div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0;"><span style="color: var(--text-secondary);">Sunday</span><span style="font-weight: 600; color: var(--secondary);">Emergency Only</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo"><i class="fas fa-hospital"></i> MediCare AI</div>
+                    <p>Providing world-class healthcare with the power of artificial intelligence.</p>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#doctors">Doctors</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#" onclick="showServiceDetail('AI Diagnostics', 'fas fa-brain', 'AI-powered diagnostic system for accurate health assessments.', ['Dr. Vikram Singh'])">AI Diagnostics</a></li>
+                        <li><a href="#" onclick="showServiceDetail('Cardiology', 'fas fa-heartbeat', 'Expert cardiac care with state-of-the-art equipment.', ['Dr. Rajesh Sharma'])">Cardiology</a></li>
+                        <li><a href="#" onclick="showServiceDetail('Neurology', 'fas fa-brain', 'Comprehensive neurological care.', ['Dr. Priya Patel'])">Neurology</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact Info</h4>
+                    <ul>
+                        <li><a href="#"><i class="fas fa-phone"></i> +91-1800-123-4567</a></li>
+                        <li><a href="#"><i class="fas fa-envelope"></i> info@medicareai.com</a></li>
+                        <li><a href="#"><i class="fas fa-map-marker"></i> New Delhi, India</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MediCare AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Service Detail Modal -->
+    <div class="modal-overlay" id="serviceDetailModal">
+        <div class="modal detail-modal">
+            <div class="modal-body">
+                <div class="detail-header">
+                    <div class="detail-icon" id="serviceModalIcon"><i class="fas fa-stethoscope"></i></div>
+                    <h2 id="serviceModalTitle">Service Title</h2>
+                    <p id="serviceModalSubtitle">Learn more about this service</p>
+                    <button class="close-btn" onclick="closeServiceDetail()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="detail-content">
+                    <h4>About This Service</h4>
+                    <p id="serviceModalDescription">Detailed description here.</p>
+                    <h4>Our Specialists</h4>
+                    <div id="serviceModalDoctors"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctor Profile Modal -->
+    <div class="modal-overlay" id="doctorProfileModal">
+        <div class="modal detail-modal">
+            <div class="modal-body">
+                <div class="detail-header">
+                    <img class="doctor-detail-avatar" id="doctorModalAvatar" src="" alt="Doctor">
+                    <h2 id="doctorModalName">Doctor Name</h2>
+                    <p id="doctorModalSpec">Specialization</p>
+                    <button class="close-btn" onclick="closeDoctorProfile()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="detail-content">
+                    <div class="detail-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>Email</span>
+                            <strong id="doctorModalEmail">Not available</strong>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-phone"></i>
+                            <span>Phone</span>
+                            <strong id="doctorModalPhone">Not available</strong>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Available Days</span>
+                            <strong id="doctorModalDays">Mon-Fri</strong>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Timings</span>
+                            <strong id="doctorModalTime">09:00-17:00</strong>
+                        </div>
+                    </div>
+                    <h4>About</h4>
+                    <p id="doctorModalAbout">Highly experienced specialist with a proven track record in treating complex medical conditions. Dedicated to providing compassionate, patient-centered care using the latest medical advancements.</p>
+                    <h4>Education</h4>
+                    <p>MBBS, MD - Gold Medalist, Fellowship in Specialized Care from top institutions. 15+ years of clinical experience.</p>
+                    <div style="margin-top: 16px;">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="closeDoctorProfile(); openBookAppointmentFlow()">
+                            <i class="fas fa-calendar-plus"></i> Book Appointment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="font-size: 1.3rem; color: var(--primary);" id="loginModalTitle"><i class="fas fa-sign-in-alt"></i> Patient Login</h3>
+                <button onclick="closeLogin()" style="background: none; border: none; font-size: 22px; color: var(--text-secondary); cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="loginContent">
+                <div id="loginTabs" style="display: flex; gap: 6px; margin-bottom: 16px;">
+                    <button onclick="showLoginTab('face')" id="faceTab" class="btn btn-primary" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;"><i class="fas fa-camera"></i> Face Login</button>
+                    <button onclick="showLoginTab('manual')" id="manualTab" class="btn btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;"><i class="fas fa-keyboard"></i> By ID/Email</button>
+                    <button onclick="showLoginTab('doctor')" id="doctorTab" class="btn btn-secondary" style="flex: 1; display: none;"><i class="fas fa-user-md"></i> Doctor</button>
+                </div>
+                <div id="faceLogin">
+                    <div style="background: var(--bg-light); border-radius: var(--radius-md); padding: 15px; text-align: center; margin-bottom: 12px;">
+                        <video id="loginVideo" autoplay playsinline style="width: 100%; max-width: 280px; border-radius: var(--radius-sm); display: block; margin: 0 auto;"></video>
+                        <canvas id="loginCanvas" style="display: none;"></canvas>
+                        <p id="loginStatus" style="margin-top: 8px; font-size: 0.8rem; color: var(--text-secondary);"><i class="fas fa-camera"></i> Position your face in the camera</p>
+                    </div>
+                    <button onclick="captureAndLogin()" class="btn btn-primary" style="width: 100%;"><i class="fas fa-camera"></i> Capture & Login</button>
+                </div>
+                <div id="manualLogin" style="display: none;">
+                    <form id="manualLoginForm" onsubmit="manualLogin(event)">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Patient ID or Email</label>
+                            <input type="text" class="form-control" id="loginPatientId" placeholder="Enter Patient ID or Email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fas fa-sign-in-alt"></i> Login</button>
+                        <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center; font-size: 0.75rem;">
+                            <a href="/register" style="color: var(--secondary); text-decoration: none;"><i class="fas fa-user-plus"></i> New? Register Here</a>
+                        </div>
+                    </form>
+                </div>
+                <div id="doctorLogin" style="display: none;">
+                    <form id="doctorLoginForm" onsubmit="doctorLogin(event)">
+                        <div style="background: #eef3ff; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 14px; font-size: 0.78rem; color: var(--primary); display: flex; align-items: center; gap: 8px;"><i class="fas fa-info-circle"></i> Doctor access panel.</div>
+                        <div class="form-group">
+                            <label><i class="fas fa-user-md"></i> Doctor ID</label>
+                            <input type="number" class="form-control" id="loginDoctorId" placeholder="Enter Doctor ID (1-6)" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-lock"></i> Access Code</label>
+                            <input type="password" class="form-control" id="loginDoctorPassword" placeholder="Enter access code" value="doctor123" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="width: 100%;"><i class="fas fa-sign-in-alt"></i> Doctor Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Elements -->
+    <div class="floating-appointment">
+        <a href="#" onclick="showBookAppointmentOptions(); return false;"><i class="fas fa-calendar-check"></i> Book Appointment</a>
+    </div>
+
+    <!-- Book Appointment Options Modal -->
+    <div class="modal-overlay" id="bookOptionsModal">
+        <div class="modal" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-calendar-plus"></i> Book Appointment</h3>
+                <button onclick="closeBookOptionsModal()" class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Please register or login to book an appointment</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="/register" class="btn btn-primary btn-lg" style="justify-content: center; width: 100%; padding: 16px; font-size: 1.05rem;">
+                        <i class="fas fa-user-plus"></i> Patient Registration
+                    </a>
+                    <button onclick="openBookLogin()" class="btn btn-secondary btn-lg" style="justify-content: center; width: 100%; padding: 16px; font-size: 1.05rem;">
+                        <i class="fas fa-sign-in-alt"></i> Patient Login
+                    </button>
+                </div>
+                <hr style="margin: 20px 0; border-color: var(--bg-light);">
+                <p style="color: var(--text-muted); font-size: 0.78rem;">
+                    <i class="fas fa-info-circle"></i> Already have an account? Login to book instantly.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <div class="chatbot-panel" id="chatbotPanel">
+            <div class="chatbot-header"><i class="fas fa-robot"></i>
+                <div class="chatbot-header-title">
+                    <div style="font-weight: 600;">MediCare AI Assistant</div>
+                    <div style="font-size: 0.7rem; opacity: 0.8;">Multilingual - Voice supported</div>
+                </div>
+                <div class="chatbot-header-tools">
+                    <select id="chatbotLang" class="chatbot-lang-select" title="Select language" onchange="onLangChange()">
+                        <option value="">Auto</option>
+                        <option>English</option>
+                        <option>हिन्दी (Hindi)</option>
+                        <option>தமிழ் (Tamil)</option>
+                        <option>తెలుగు (Telugu)</option>
+                        <option>বাংলা (Bengali)</option>
+                        <option>मराठी (Marathi)</option>
+                        <option>ગુજરાતી (Gujarati)</option>
+                        <option>اردو (Urdu)</option>
+                        <option>ਪੰਜਾਬੀ (Punjabi)</option>
+                        <option>മലയാളം (Malayalam)</option>
+                        <option>ಕನ್ನಡ (Kannada)</option>
+                        <option>Español (Spanish)</option>
+                        <option>Français (French)</option>
+                        <option>Deutsch (German)</option>
+                        <option>العربية (Arabic)</option>
+                        <option>Português (Portuguese)</option>
+                        <option>Русский (Russian)</option>
+                        <option>中文 (Chinese)</option>
+                        <option>日本語 (Japanese)</option>
+                        <option>한국어 (Korean)</option>
+                    </select>
+                    <button class="tts-toggle-btn" id="ttsToggleBtn" title="Voice replies ON (click to mute)" onclick="toggleTTS()"><i class="fas fa-volume-up"></i></button>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot">
+                    <div class="message-content">Hello! I'm your MediCare AI assistant. How can I help you today? &#128522;</div>
+                </div>
+            </div>
+            <div class="chatbot-suggestions">
+                <button class="suggestion-chip chip-symptom" onclick="sendSuggestion('I have fever and headache')"><i class="fas fa-thermometer-half"></i> Fever</button>
+                <button class="suggestion-chip chip-symptom" onclick="sendSuggestion('I have cough and cold')"><i class="fas fa-head-side-cough"></i> Cough</button>
+                <button class="suggestion-chip chip-hospital" onclick="sendSuggestion('How to book appointment?')"><i class="fas fa-calendar"></i> Appointment</button>
+                <button class="suggestion-chip chip-hospital" onclick="sendSuggestion('What are your working hours?')"><i class="fas fa-clock"></i> Hours</button>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+                <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Voice input"><i class="fas fa-microphone"></i></button>
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chatbot-toggle" onclick="toggleChatbot()"><i class="fas fa-robot"></i></button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        var pendingAppointmentRedirect = false;
+        var loginStream = null;
+        var currentLoginType = 'patient';
+
+        // ==================== NAVIGATION ====================
+        function toggleNav() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        window.addEventListener('scroll', function() {
+            var navbar = document.querySelector('.main-navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('sticky');
+            } else {
+                navbar.classList.remove('sticky');
+            }
+        });
+
+        // ==================== SERVICE DETAIL MODAL ====================
+        var servicesDoctorsMap = {};
+
+        function showServiceDetail(title, icon, description, doctors) {
+            document.getElementById('serviceModalTitle').textContent = title;
+            document.getElementById('serviceModalIcon').innerHTML = '<i class="' + icon + '"></i>';
+            document.getElementById('serviceModalDescription').textContent = description;
+            var docContainer = document.getElementById('serviceModalDoctors');
+            docContainer.innerHTML = '';
+            if (doctors && doctors.length > 0) {
+                for (var i = 0; i < doctors.length; i++) {
+                    var chip = document.createElement('span');
+                    chip.className = 'specialist-chip';
+                    chip.innerHTML = '<i class="fas fa-user-md"></i> Dr. ' + doctors[i];
+                    chip.onclick = function(name) {
+                        return function() {
+                            closeServiceDetail();
+                            showToast('info', 'Dr. ' + name + ' is a specialist in this field');
+                        };
+                    }(doctors[i]);
+                    docContainer.appendChild(chip);
+                }
+            } else {
+                docContainer.innerHTML = '<p style="color: var(--text-secondary);">No specialists listed yet.</p>';
+            }
+            document.getElementById('serviceDetailModal').classList.add('active');
+        }
+
+        function closeServiceDetail() {
+            document.getElementById('serviceDetailModal').classList.remove('active');
+        }
+
+        document.getElementById('serviceDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeServiceDetail();
+        });
+
+        // ==================== DOCTOR PROFILE MODAL ====================
+        function showDoctorProfile(doc) {
+            var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(doc.name) + '&background=121c5e&color=fff&size=100&bold=true';
+            document.getElementById('doctorModalAvatar').src = avatarUrl;
+            document.getElementById('doctorModalName').textContent = doc.name;
+            document.getElementById('doctorModalSpec').textContent = doc.specialization;
+            document.getElementById('doctorModalEmail').textContent = doc.email || 'Not available';
+            document.getElementById('doctorModalPhone').textContent = doc.phone || 'Not available';
+            document.getElementById('doctorModalDays').textContent = doc.available_days || 'Mon-Fri';
+            document.getElementById('doctorModalTime').textContent = doc.available_time || '09:00-17:00';
+            document.getElementById('doctorProfileModal').classList.add('active');
+        }
+
+        function closeDoctorProfile() {
+            document.getElementById('doctorProfileModal').classList.remove('active');
+        }
+
+        document.getElementById('doctorProfileModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDoctorProfile();
+        });
+
+        function openBookAppointmentFlow() {
+            window.location.href = '/appointments';
+        }
+
+        // ==================== LOGIN ====================
+        function openLogin(type) {
+            currentLoginType = type;
+            document.getElementById('loginOverlay').classList.add('active');
+            var title = document.getElementById('loginModalTitle');
+            var faceTab = document.getElementById('faceTab');
+            var manualTab = document.getElementById('manualTab');
+            var doctorTab = document.getElementById('doctorTab');
+            if (type === 'doctor') {
+                title.innerHTML = '<i class="fas fa-user-md"></i> Doctor Login';
+                faceTab.style.display = 'none';
+                manualTab.style.display = 'none';
+                doctorTab.style.display = 'block';
+                showLoginTab('doctor');
+            } else {
+                title.innerHTML = '<i class="fas fa-sign-in-alt"></i> Patient Login';
+                faceTab.style.display = 'block';
+                manualTab.style.display = 'block';
+                doctorTab.style.display = 'none';
+                showLoginTab('face');
+                startLoginCamera();
+            }
+        }
+
+        function closeLogin() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            stopLoginCamera();
+        }
+
+        function showLoginTab(tab) {
+            document.getElementById('faceLogin').style.display = 'none';
+            document.getElementById('manualLogin').style.display = 'none';
+            document.getElementById('doctorLogin').style.display = 'none';
+            if (tab === 'face') {
+                document.getElementById('faceLogin').style.display = 'block';
+                document.getElementById('faceTab').className = 'btn btn-primary';
+                document.getElementById('manualTab').className = 'btn btn-secondary';
+                startLoginCamera();
+            } else if (tab === 'manual') {
+                document.getElementById('manualLogin').style.display = 'block';
+                document.getElementById('faceTab').className = 'btn btn-secondary';
+                document.getElementById('manualTab').className = 'btn btn-primary';
+                stopLoginCamera();
+            } else if (tab === 'doctor') {
+                document.getElementById('doctorLogin').style.display = 'block';
+                document.getElementById('doctorTab').className = 'btn btn-primary';
+                stopLoginCamera();
+            }
+        }
+
+        async function startLoginCamera() {
+            try {
+                loginStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 320,
+                        height: 240,
+                        facingMode: 'user'
+                    }
+                });
+                document.getElementById('loginVideo').srcObject = loginStream;
+            } catch (err) {
+                document.getElementById('loginStatus').innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera access denied';
+            }
+        }
+
+        function stopLoginCamera() {
+            if (loginStream) {
+                loginStream.getTracks().forEach(function(t) {
+                    t.stop();
+                });
+                loginStream = null;
+            }
+        }
+
+        async function captureAndLogin() {
+            var video = document.getElementById('loginVideo');
+            var canvas = document.getElementById('loginCanvas');
+            var status = document.getElementById('loginStatus');
+            if (!video.srcObject) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera not available';
+                return;
+            }
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            var imageData = canvas.toDataURL('image/jpeg', 0.9);
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recognizing face...';
+            try {
+                var r = await fetch('/face-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+                var result = await r.json();
+                if (result.success) {
+                    showToast('success', 'Login successful! Redirecting...');
+                    setTimeout(function() {
+                        if (pendingAppointmentRedirect) {
+                            pendingAppointmentRedirect = false;
+                            window.location.href = '/appointments';
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 1500);
+                } else {
+                    status.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> ' + (result.message || 'Not recognized');
+                    showToast('error', result.message);
+                }
+            } catch (err) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Connection error';
+                showToast('error', 'Connection error');
+            }
+        }
+
+        async function manualLogin(e) {
+            e.preventDefault();
+            var input = document.getElementById('loginPatientId').value.trim();
+            if (!input) {
+                showToast('error', 'Please enter your Patient ID or email');
+                return;
+            }
+            try {
+                var r = await fetch('/manual-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: isNaN(input) ? null : parseInt(input),
+                        email: isNaN(input) ? input : null
+                    })
+                });
+                var result = await r.json();
+                if (result.success) {
+                    showToast('success', 'Login successful! Redirecting...');
+                    setTimeout(function() {
+                        if (pendingAppointmentRedirect) {
+                            pendingAppointmentRedirect = false;
+                            window.location.href = '/appointments';
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 1500);
+                } else {
+                    showToast('error', result.message || 'Patient not found');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        async function doctorLogin(e) {
+            e.preventDefault();
+            var id = document.getElementById('loginDoctorId').value;
+            var pw = document.getElementById('loginDoctorPassword').value;
+            if (!id) {
+                showToast('error', 'Please enter Doctor ID');
+                return;
+            }
+            try {
+                var r = await fetch('/doctor-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        doctor_id: parseInt(id),
+                        password: pw
+                    })
+                });
+                var result = await r.json();
+                if (result.success) {
+                    showToast('success', 'Doctor login successful!');
+                    setTimeout(function() {
+                        window.location.href = '/doctor';
+                    }, 1500);
+                } else {
+                    showToast('error', result.message || 'Doctor not found');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error.');
+            }
+        }
+
+        document.getElementById('loginOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeLogin();
+        });
+
+        // ==================== BOOK APPOINTMENT OPTIONS ====================
+        function showBookAppointmentOptions() {
+            document.getElementById('bookOptionsModal').classList.add('active');
+        }
+        
+        function closeBookOptionsModal() {
+            document.getElementById('bookOptionsModal').classList.remove('active');
+        }
+        
+        function openBookLogin() {
+            closeBookOptionsModal();
+            pendingAppointmentRedirect = true;
+            openLogin('patient');
+        }
+        
+        async function handleBookAppointment() {
+            try {
+                var r = await fetch('/api/check-session');
+                var d = await r.json();
+                if (d.logged_in) {
+                    window.location.href = '/appointments';
+                } else {
+                    pendingAppointmentRedirect = true;
+                    openLogin('patient');
+                    showToast('info', 'Please sign in first to book an appointment');
+                }
+            } catch (err) {
+                pendingAppointmentRedirect = true;
+                openLogin('patient');
+                showToast('info', 'Please sign in first to book an appointment');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(type, message) {
+            var c = document.getElementById('toastContainer');
+            var icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            var t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.innerHTML = '<i class="fas ' + icons[type] + '"></i> ' + message;
+            t.onclick = function() {
+                t.remove();
+            };
+            c.appendChild(t);
+            setTimeout(function() {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(100%)';
+                setTimeout(function() {
+                    t.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        // Smooth scroll for links
+        document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                var href = this.getAttribute('href');
+                if (href && href.startsWith('#') && href.length > 1 && href !== '#') {
+                    e.preventDefault();
+                    var target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="/static/js/chatbot.js"></script>
+    </body>
+
+</html>

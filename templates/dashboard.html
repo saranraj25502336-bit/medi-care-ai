@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon"><i class="fas fa-hospital"></i></div>
+            <span>MediCare AI</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/dashboard" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="/appointments"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            <li>
+                <div class="user-badge">
+                    <div class="avatar">{{ patient.name[0] }}</div>
+                    <span class="user-name">{{ patient.name }}</span>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="animate-fadeInDown" style="margin-bottom: 30px;">
+                <h1 style="font-size: 1.8rem; margin-bottom: 6px;">Welcome back, {{ patient.name }}! 👋</h1>
+                <p style="color: var(--text-secondary);">Here's your health overview and upcoming appointments.</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card animate-fadeInUp delay-1">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ appointments|length if appointments else 0 }}</h4>
+                        <p>Appointments</p>
+                    </div>
+                </div>
+
+                <div class="stat-card animate-fadeInUp delay-2">
+                    <div class="stat-icon green">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ medical_records|length if medical_records else 0 }}</h4>
+                        <p>Medical Records</p>
+                    </div>
+                </div>
+
+                <div class="stat-card animate-fadeInUp delay-3">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ doctors|length if doctors else 6 }}</h4>
+                        <p>Available Doctors</p>
+                    </div>
+                </div>
+
+                <div class="stat-card animate-fadeInUp delay-4">
+                    <div class="stat-icon red">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ patient.age }}</h4>
+                        <p>Age</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Grid -->
+            <div class="grid-2">
+                <!-- Medical Records & Prescriptions -->
+                <div class="card animate-fadeInUp delay-2">
+                    <div class="card-header">
+                        <h3><i class="fas fa-notes-medical"></i> Medical Records & Prescriptions</h3>
+                        <span class="badge badge-primary">{{ medical_records|length if medical_records else 0 }} Records</span>
+                    </div>
+                    <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                        {% if medical_records %} {% for record in medical_records %}
+                        <div style="padding: 16px; border: 1px solid #e0e6f8; border-radius: var(--radius-md); margin-bottom: 12px; background: white;">
+                            <!-- Doctor Header -->
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--bg-light);">
+                                <div style="width: 44px; height: 44px; background: rgba(26,54,93,0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 18px;">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary);">Dr. {{ record.doctor_name }}</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.75rem;">
+                                        <i class="fas fa-calendar"></i> {{ record.visit_date }} {% if record.doctor_notes %}
+                                        <span style="margin-left: 10px;"><i class="fas fa-stethoscope"></i> {{ record.doctor_notes[:30] }}{% if record.doctor_notes|length > 30 %}...{% endif %}</span> {% endif %}
+                                    </div>
+                                </div>
+                                <div style="width: 32px; height: 32px; background: rgba(47,133,90,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--success);">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Symptoms -->
+                            {% if record.symptoms %}
+                            <div style="margin-bottom: 10px; padding: 8px 12px; background: #faf7ff; border-radius: var(--radius-sm); border-left: 3px solid var(--warning);">
+                                <div style="font-size: 0.75rem; color: var(--warning); font-weight: 600; margin-bottom: 2px;"><i class="fas fa-thermometer-half"></i> SYMPTOMS</div>
+                                <div style="font-size: 0.85rem;">{{ record.symptoms }}</div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Diagnosis -->
+                            <div style="margin-bottom: 10px; padding: 8px 12px; background: #eef3ff; border-radius: var(--radius-sm); border-left: 3px solid var(--info);">
+                                <div style="font-size: 0.75rem; color: var(--info); font-weight: 600; margin-bottom: 2px;"><i class="fas fa-diagnoses"></i> DIAGNOSIS</div>
+                                <div style="font-size: 0.85rem; font-weight: 600;">{{ record.diagnosis }}</div>
+                            </div>
+
+                            <!-- Prescription -->
+                            <div style="padding: 8px 12px; background: #f0fff4; border-radius: var(--radius-sm); border-left: 3px solid var(--success);">
+                                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-bottom: 2px;"><i class="fas fa-pills"></i> PRESCRIPTION</div>
+                                <div style="font-size: 0.85rem; white-space: pre-wrap;">{{ record.prescription }}</div>
+                            </div>
+
+                            <!-- Doctor Notes -->
+                            {% if record.doctor_notes %}
+                            <div style="margin-top: 10px; padding: 8px 12px; background: var(--bg-light); border-radius: var(--radius-sm);">
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 2px;"><i class="fas fa-notes-medical"></i> DOCTOR'S NOTES</div>
+                                <div style="font-size: 0.82rem; color: var(--text-secondary); font-style: italic;">{{ record.doctor_notes }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %} {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-medical"></i>
+                            <h3>No Medical Records Yet</h3>
+                            <p style="font-size: 0.85rem;">Your medical records and prescriptions will appear here once a doctor adds them.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Appointments -->
+                <div class="card animate-fadeInUp delay-3">
+                    <div class="card-header">
+                        <h3><i class="fas fa-calendar-alt"></i> Appointments</h3>
+                        <a href="/appointments" class="btn btn-sm btn-primary">Book New</a>
+                    </div>
+                    <div class="card-body">
+                        {% if appointments %} {% for apt in appointments %}
+                        <div style="padding: 14px; border-bottom: 1px solid #eef2fe; display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 44px; height: 44px; background: rgba(189,30,46,0.06); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--secondary); font-size: 18px;">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 2px;">Dr. {{ apt.doctor_name }}</div>
+                                <div style="color: var(--text-secondary); font-size: 0.78rem;">{{ apt.specialization }} • {{ apt.appointment_date }}</div>
+                            </div>
+                            <div>
+                                <span class="badge {% if apt.status == 'approved' %}badge-success{% elif apt.status == 'rejected' %}badge-danger{% else %}badge-warning{% endif %}">
+                                        {{ apt.appointment_time }} • {{ apt.status }}
+                                    </span>
+                            </div>
+                        </div>
+                        {% endfor %} {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h3>No Appointments</h3>
+                            <p style="font-size: 0.85rem;">Book an appointment to get started</p>
+                            <a href="/appointments" class="btn btn-primary btn-sm mt-20">
+                                <i class="fas fa-plus"></i> Book Now
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Details Card with Profile Picture -->
+            <div class="card animate-fadeInUp delay-4 mt-30">
+                <div class="card-header">
+                    <h3><i class="fas fa-user"></i> Patient Profile</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                        <!-- Profile Avatar / Photo -->
+                        <div style="flex-shrink: 0; text-align: center;">
+                            {% if patient.face_image and patient.face_image != '' %}
+                            <img src="{{ url_for('static', filename='uploads/' + patient.face_image) }}" alt="{{ patient.name }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg-light); box-shadow: 0 4px 14px rgba(0,0,0,0.1);">                            {% else %}
+                            <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-light)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; border: 4px solid var(--bg-light); box-shadow: 0 4px 14px rgba(0,0,0,0.1);">
+                                {{ patient.name[0] }}
+                            </div>
+                            {% endif %}
+                            <div style="margin-top: 8px;">
+                                <span class="badge badge-success">Patient</span>
+                            </div>
+                        </div>
+                        <!-- Patient Details -->
+                        <div style="flex: 1; min-width: 200px;">
+                            <h2 style="font-size: 1.4rem; margin-bottom: 4px; font-family: 'Playfair Display', serif;">{{ patient.name }}</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
+                                <i class="fas fa-id-card"></i> Patient ID: #{{ patient.patient_id }}
+                                <span style="margin: 0 8px;">|</span>
+                                <i class="fas fa-calendar"></i> Age: {{ patient.age }}
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 400px;">
+                                <div style="padding: 8px 12px; background: var(--bg-light); border-radius: var(--radius-sm);">
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Email</div>
+                                    <div style="font-size: 0.85rem; font-weight: 600;">{{ patient.email }}</div>
+                                </div>
+                                <div style="padding: 8px 12px; background: var(--bg-light); border-radius: var(--radius-sm);">
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Phone</div>
+                                    <div style="font-size: 0.85rem; font-weight: 600;">{{ patient.phone }}</div>
+                                </div>
+                                <div style="padding: 8px 12px; background: var(--bg-light); border-radius: var(--radius-sm);">
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Registered</div>
+                                    <div style="font-size: 0.85rem; font-weight: 600;">{{ patient.registration_date }}</div>
+                                </div>
+                                <div style="padding: 8px 12px; background: var(--bg-light); border-radius: var(--radius-sm);">
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Age</div>
+                                    <div style="font-size: 0.85rem; font-weight: 600;">{{ patient.age }} years</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <div class="chatbot-panel" id="chatbotPanel">
+            <div class="chatbot-header">
+                <i class="fas fa-robot"></i>
+                <div class="chatbot-header-title">
+                    <div style="font-weight: 600;">MediCare AI Assistant</div>
+                    <div style="font-size: 0.7rem; opacity: 0.8;">Multilingual - Voice supported</div>
+                </div>
+                <div class="chatbot-header-tools">
+                    <select id="chatbotLang" class="chatbot-lang-select" title="Select language" onchange="onLangChange()">
+                        <option value="">Auto</option>
+                        <option>English</option>
+                        <option>हिन्दी (Hindi)</option>
+                        <option>தமிழ் (Tamil)</option>
+                        <option>తెలుగు (Telugu)</option>
+                        <option>বাংলা (Bengali)</option>
+                        <option>मराठी (Marathi)</option>
+                        <option>ગુજરાતી (Gujarati)</option>
+                        <option>اردو (Urdu)</option>
+                        <option>ਪੰਜਾਬੀ (Punjabi)</option>
+                        <option>മലയാളം (Malayalam)</option>
+                        <option>ಕನ್ನಡ (Kannada)</option>
+                        <option>Español (Spanish)</option>
+                        <option>Français (French)</option>
+                        <option>Deutsch (German)</option>
+                        <option>العربية (Arabic)</option>
+                        <option>Português (Portuguese)</option>
+                        <option>Русский (Russian)</option>
+                        <option>中文 (Chinese)</option>
+                        <option>日本語 (Japanese)</option>
+                        <option>한국어 (Korean)</option>
+                    </select>
+                    <button class="tts-toggle-btn" id="ttsToggleBtn" title="Voice replies ON (click to mute)" onclick="toggleTTS()"><i class="fas fa-volume-up"></i></button>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot">
+                    <div class="message-content">
+                        Hello {{ patient.name }}! I'm your personal health assistant. How can I help you today? 😊
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-suggestions">
+                <button class="suggestion-chip chip-symptom" onclick="sendSuggestion('I have fever')">
+                    <i class="fas fa-thermometer-half"></i> Fever
+                </button>
+                <button class="suggestion-chip chip-symptom" onclick="sendSuggestion('I have headache')">
+                    <i class="fas fa-head-side-cough"></i> Headache
+                </button>
+                <button class="suggestion-chip chip-hospital" onclick="sendSuggestion('Book appointment')">
+                    <i class="fas fa-calendar"></i> Appointment
+                </button>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+                <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Voice input"><i class="fas fa-microphone"></i></button>
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chatbot-toggle" onclick="toggleChatbot()">
+            <i class="fas fa-comment-medical"></i>
+        </button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas ${icons[type]}"></i> ${message}`;
+            toast.onclick = () => toast.remove();
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+    </script>
+    <script src="/static/js/chatbot.js"></script>
+    </body>
+
+</html>

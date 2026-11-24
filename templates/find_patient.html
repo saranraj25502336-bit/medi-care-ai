@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Patient | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon"><i class="fas fa-hospital"></i></div>
+            <span>MediCare AI</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="/find-patient" class="active"><i class="fas fa-search"></i> Find Patient</a></li>
+            <li><a href="/register"><i class="fas fa-user-plus"></i> Register</a></li>
+            <li><a href="/admin-login"><i class="fas fa-user-shield"></i> Admin</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <!-- Header -->
+            <div class="animate-fadeInDown" style="margin-bottom: 30px;">
+                <h1 style="font-size: 1.8rem; margin-bottom: 6px;">
+                    <i class="fas fa-search" style="color: var(--secondary);"></i> Find Patient
+                </h1>
+                <p style="color: var(--text-secondary);">Scan a patient's face to instantly retrieve their medical records and details</p>
+            </div>
+
+            <!-- Scan Section -->
+            <div class="grid-2">
+                <!-- Camera / Scan -->
+                <div class="card animate-fadeInUp delay-1">
+                    <div class="card-header">
+                        <h3><i class="fas fa-camera"></i> Face Scanner</h3>
+                    </div>
+                    <div class="card-body" style="text-align: center;">
+                        <div style="background: var(--bg-light); border-radius: var(--radius-md); padding: 20px; margin-bottom: 16px;">
+                            <video id="scanVideo" autoplay playsinline style="width: 100%; max-width: 360px; border-radius: var(--radius-sm); display: block; margin: 0 auto;"></video>
+                            <canvas id="scanCanvas" style="display: none;"></canvas>
+                            <p id="scanStatus" style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+                                <i class="fas fa-camera"></i> Position patient's face in the camera
+                            </p>
+                        </div>
+                        <button onclick="scanFace()" class="btn btn-primary btn-lg" style="width: 100%;">
+                            <i class="fas fa-camera"></i> Scan Face
+                        </button>
+                        <p style="margin-top: 10px; font-size: 0.78rem; color: var(--text-muted);">
+                            <i class="fas fa-info-circle"></i> Or enter Patient ID manually below
+                        </p>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <input type="number" id="manualPatientId" class="form-control" placeholder="Enter Patient ID" min="1">
+                            <button onclick="findById()" class="btn btn-secondary">
+                                <i class="fas fa-search"></i> Find
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Details (shown after scan) -->
+                <div class="card animate-fadeInUp delay-2">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user"></i> Patient Details</h3>
+                        <span id="confidenceBadge" style="display: none;" class="badge badge-success">Confidence: 0%</span>
+                    </div>
+                    <div class="card-body" id="patientDetails">
+                        <div class="empty-state" id="emptyState">
+                            <i class="fas fa-user-injured"></i>
+                            <h3>No Patient Scanned Yet</h3>
+                            <p style="font-size: 0.85rem;">Use the face scanner or enter a Patient ID to view details</p>
+                        </div>
+
+                        <div id="patientInfo" style="display: none;">
+                            <!-- Patient Basic Info -->
+                            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+                                <h2 id="patientName" style="color: white; margin-bottom: 4px; font-size: 1.3rem;"></h2>
+                                <p id="patientMeta" style="opacity: 0.9; font-size: 0.82rem;"></p>
+                                <p id="patientContact" style="opacity: 0.8; font-size: 0.78rem; margin-top: 4px;"></p>
+                            </div>
+
+                            <!-- Medical Records -->
+                            <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-notes-medical" style="color: var(--secondary);"></i> Medical Records
+                            </h4>
+                            <div id="medicalRecordsList" style="margin-bottom: 20px;">
+                                <div class="empty-state" style="padding: 20px;">
+                                    <i class="fas fa-file-medical"></i>
+                                    <p style="font-size: 0.85rem;">No medical records found</p>
+                                </div>
+                            </div>
+
+                            <!-- Appointments -->
+                            <h4 style="margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-calendar-alt" style="color: var(--secondary);"></i> Appointments
+                            </h4>
+                            <div id="appointmentsList">
+                                <div class="empty-state" style="padding: 20px;">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <p style="font-size: 0.85rem;">No appointments found</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let scanStream = null;
+
+        async function startCamera() {
+            try {
+                scanStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 640,
+                        height: 480,
+                        facingMode: 'user'
+                    }
+                });
+                document.getElementById('scanVideo').srcObject = scanStream;
+                return true;
+            } catch (err) {
+                console.error('Camera error:', err);
+                document.getElementById('scanStatus').innerHTML =
+                    '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera access denied';
+                return false;
+            }
+        }
+
+        function stopCamera() {
+            if (scanStream) {
+                scanStream.getTracks().forEach(track => track.stop());
+                scanStream = null;
+            }
+        }
+
+        async function scanFace() {
+            const video = document.getElementById('scanVideo');
+            const canvas = document.getElementById('scanCanvas');
+            const status = document.getElementById('scanStatus');
+
+            if (!video.srcObject) {
+                const started = await startCamera();
+                if (started) {
+                    setTimeout(scanFace, 500);
+                }
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning face...';
+
+            try {
+                const response = await fetch('/find-patient/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayPatient(result);
+                    status.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Patient found!';
+                    showToast('success', 'Patient found: ' + result.patient.name);
+                } else {
+                    status.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> ' + (result.message || 'Patient not found');
+                    showToast('error', result.message || 'Face not recognized');
+                }
+            } catch (err) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Connection error';
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        async function findById() {
+            const patientId = document.getElementById('manualPatientId').value.trim();
+            if (!patientId) {
+                showToast('error', 'Please enter a Patient ID');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/patient/' + patientId);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayPatient({
+                        patient: result.patient,
+                        medical_records: result.medical_records,
+                        appointments: result.appointments,
+                        confidence: 1.0
+                    });
+                    document.getElementById('scanStatus').innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Patient found by ID!';
+                    showToast('success', 'Patient found: ' + result.patient.name);
+                } else {
+                    showToast('error', result.message || 'Patient not found');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error');
+            }
+        }
+
+        function displayPatient(data) {
+            const patient = data.patient;
+            const records = data.medical_records || [];
+            const appointments = data.appointments || [];
+            const confidence = data.confidence || 0;
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('patientInfo').style.display = 'block';
+
+            document.getElementById('patientName').textContent = patient.name || 'Unknown';
+            document.getElementById('patientMeta').innerHTML =
+                'Patient ID: #' + (patient.patient_id || 'N/A') + ' | Age: ' + (patient.age || 'N/A');
+            document.getElementById('patientContact').innerHTML =
+                (patient.email || '') + (patient.phone ? ' | ' + patient.phone : '');
+
+            const badge = document.getElementById('confidenceBadge');
+            badge.style.display = 'inline-block';
+            badge.textContent = 'Confidence: ' + (confidence * 100).toFixed(1) + '%';
+            badge.className = 'badge ' + (confidence > 0.6 ? 'badge-success' : 'badge-warning');
+
+            // Medical Records
+            const recordsDiv = document.getElementById('medicalRecordsList');
+            if (records.length > 0) {
+                let html = '';
+                records.forEach(rec => {
+                    html += `
+                        <div style="background: var(--bg-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; font-size: 0.82rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <strong>Dr. ${rec.doctor_name || 'Unknown'}</strong>
+                                <span style="color: var(--text-secondary);">${rec.visit_date || ''}</span>
+                            </div>
+                            <div><strong>Diagnosis:</strong> ${rec.diagnosis || 'N/A'}</div>
+                            <div><strong>Prescription:</strong> ${rec.prescription || 'N/A'}</div>
+                            ${rec.symptoms ? '<div style="color: var(--text-secondary);"><strong>Symptoms:</strong> ' + rec.symptoms + '</div>' : ''}
+                        </div>
+                    `;
+                });
+                recordsDiv.innerHTML = html;
+            } else {
+                recordsDiv.innerHTML = '<div class="empty-state" style="padding: 20px;"><i class="fas fa-file-medical"></i><p style="font-size: 0.85rem;">No medical records found</p></div>';
+            }
+
+            // Appointments
+            const aptDiv = document.getElementById('appointmentsList');
+            if (appointments.length > 0) {
+                let html = '';
+                appointments.forEach(apt => {
+                    const statusClass = apt.status === 'approved' ? 'badge-success' : apt.status === 'rejected' ? 'badge-danger' : 'badge-warning';
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #eef2fe; font-size: 0.82rem;">
+                            <div style="width: 36px; height: 36px; background: rgba(189,30,46,0.06); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--secondary);">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">Dr. ${apt.doctor_name || 'N/A'}</div>
+                                <div style="color: var(--text-secondary);">${apt.appointment_date || ''} at ${apt.appointment_time || ''}</div>
+                            </div>
+                            <span class="badge ${statusClass}">${apt.status || 'pending'}</span>
+                        </div>
+                    `;
+                });
+                aptDiv.innerHTML = html;
+            } else {
+                aptDiv.innerHTML = '<div class="empty-state" style="padding: 20px;"><i class="fas fa-calendar-times"></i><p style="font-size: 0.85rem;">No appointments found</p></div>';
+            }
+        }
+
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas ${icons[type]}"></i> ${message}`;
+            toast.onclick = () => toast.remove();
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Start camera on load
+        window.addEventListener('load', startCamera);
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
+</body>
+
+</html>

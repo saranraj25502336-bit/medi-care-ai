@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appointment QR | MediCare AI Hospital</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+  body { background:#f4f7fb; font-family:'Inter',system-ui,sans-serif; margin:0; color:#0f172a; text-align:center; }
+  .wrap { max-width:480px; margin:30px auto; padding:0 16px; }
+  .card { background:#fff; border-radius:18px; padding:26px; box-shadow:0 4px 16px rgba(15,23,42,.1); }
+  img.qr { width:260px; height:260px; border-radius:12px; border:8px solid #f8fafc; }
+  .detail { color:#475569; font-size:.9rem; margin-top:10px; }
+  .token { word-break:break-all; background:#f8fafc; padding:10px; border-radius:10px; font-size:.78rem; color:#64748b; margin-top:12px; }
+  .note { margin-top:12px; font-size:.72rem; color:#94a3b8; }
+  a { color:#c9a227; font-weight:700; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h2>Check-in QR Code</h2>
+    {% if qr_data_uri %}
+      <img class="qr" src="{{ qr_data_uri }}" alt="QR Code">
+      <div style="margin-top:12px;"><button onclick="window.print()">Print QR</button></div>
+    {% else %}
+      <div class="token">QR image unavailable — use this token:</div>
+    {% endif %}
+    <div class="detail">
+      Appointment with <b>{{ appointment.doctor_name }}</b><br>
+      {{ appointment.appointment_date }} at {{ appointment.appointment_time }}
+    </div>
+    {% if token %}<div class="token">Token: {{ token }}</div>{% endif %}
+    <div class="note">Show this QR at reception to check in. Each QR is single-use; a new one is issued on this page.</div>
+    <div style="margin-top:14px;"><a href="/appointments">← Back to appointments</a></div>
+  </div>
+</div>
+</body>
+</html>

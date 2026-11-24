@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Registration | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon"><i class="fas fa-hospital"></i></div>
+            <span>MediCare AI</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="/register" class="active"><i class="fas fa-user-plus"></i> Register</a></li>
+            <li><a href="#" onclick="openLogin('patient')"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+        </ul>
+    </nav>
+
+    <!-- Registration Page -->
+    <div class="register-page-wrapper">
+        <div class="register-container animate-scaleIn">
+            <div class="register-header">
+                <div style="width: 60px; height: 60px; background: rgba(189,30,46,0.06); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; color: var(--secondary);">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2>New Patient Registration</h2>
+                <p>Register your details and enroll your face for AI-powered access</p>
+            </div>
+
+            <form id="registerForm" method="POST" action="/register" style="padding: 0 30px 30px;">
+                <!-- Personal Details -->
+                <div class="form-section">
+                    <h3><i class="fas fa-user"></i> Personal Information</h3>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Age</label>
+                        <input type="number" class="form-control" id="age" name="age" placeholder="Enter age" min="1" max="150" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter 10-digit phone number" pattern="[0-9]{10}" required>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">10-digit mobile number (e.g. 9876543210)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address" required>
+                    </div>
+                </div>
+
+                <!-- Face Capture Section -->
+                <div class="form-section">
+                    <h3><i class="fas fa-face-smile"></i> Face Enrollment <span style="font-weight: 400; font-size: 0.75rem; color: var(--text-muted);">(Optional)</span></h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
+                        Capture your face for future recognition-based login. You can skip this and register without face data.
+                    </p>
+
+                    <div class="face-capture-section">
+                        <div class="camera-preview" id="cameraPreview">
+                            <video id="regVideo" autoplay playsinline></video>
+                            <canvas id="regCanvas" style="display:none;"></canvas>
+                        </div>
+
+                        <input type="hidden" id="faceData" name="face_data">
+                        <input type="hidden" id="faceImage" name="face_image">
+
+                        <div id="captureStatus" style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+                            <i class="fas fa-camera"></i> Click "Capture Face" to take a photo
+                        </div>
+
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <button type="button" class="camera-btn" id="captureFaceBtn" onclick="captureFace()">
+                                <i class="fas fa-camera"></i> Capture Face
+                            </button>
+                            <button type="button" class="camera-btn" id="skipFaceBtn" onclick="skipFace()" style="background: var(--text-secondary);">
+                                <i class="fas fa-skip"></i> Skip Face
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login Link -->
+                <div class="login-link" style="margin: 15px 0;">
+                    <i class="fas fa-arrow-left"></i> Already registered?
+                    <a href="#" onclick="openLogin('patient')">Go to Face Recognition Login</a>
+                </div>
+
+                <!-- Submit -->
+                <div style="margin-top: 10px;">
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="fas fa-check-circle"></i> Register Patient
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 1.3rem; color: var(--primary);" id="loginModalTitle"><i class="fas fa-sign-in-alt"></i> Patient Login</h3>
+                <button onclick="closeLogin()" style="background: none; border: none; font-size: 22px; color: var(--text-secondary); cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="loginContent">
+                <!-- Login tabs -->
+                <div id="loginTabs" style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <button onclick="showLoginTab('face')" id="faceTab" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-camera"></i> Face Login
+                    </button>
+                    <button onclick="showLoginTab('manual')" id="manualTab" class="btn btn-secondary" style="flex: 1;">
+                        <i class="fas fa-keyboard"></i> Manual Login
+                    </button>
+                    <button onclick="showLoginTab('doctor')" id="doctorTab" class="btn btn-secondary" style="flex: 1; display: none;">
+                        <i class="fas fa-user-md"></i> Doctor
+                    </button>
+                </div>
+
+                <!-- Face Login -->
+                <div id="faceLogin">
+                    <div style="background: var(--bg-light); border-radius: var(--radius-md); padding: 20px; text-align: center; margin-bottom: 16px;">
+                        <video id="loginVideo" autoplay playsinline style="width: 100%; max-width: 320px; border-radius: var(--radius-sm); display: block; margin: 0 auto;"></video>
+                        <canvas id="loginCanvas" style="display: none;"></canvas>
+                        <p id="loginStatus" style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+                            <i class="fas fa-camera"></i> Position your face in the camera
+                        </p>
+                    </div>
+                    <button onclick="captureAndLogin()" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-camera"></i> Capture & Login
+                    </button>
+                </div>
+
+                <!-- Manual Login (Patient) -->
+                <div id="manualLogin" style="display: none;">
+                    <form id="manualLoginForm" onsubmit="manualLogin(event)">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Patient ID or Email</label>
+                            <input type="text" class="form-control" id="loginPatientId" placeholder="Enter Patient ID or Email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                        <p style="margin-top: 10px; font-size: 0.78rem; color: var(--text-secondary); text-align: center;">
+                            <i class="fas fa-info-circle"></i> Enter your Patient ID (e.g. 1) or your registered email
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Doctor Login -->
+                <div id="doctorLogin" style="display: none;">
+                    <form id="doctorLoginForm" onsubmit="doctorLogin(event)">
+                        <div class="form-group">
+                            <label><i class="fas fa-user-md"></i> Doctor ID</label>
+                            <input type="number" class="form-control" id="loginDoctorId" placeholder="Enter Doctor ID (1-6)" min="1" max="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-lock"></i> Access Code</label>
+                            <input type="password" class="form-control" id="loginDoctorPassword" placeholder="Enter access code" value="doctor123" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                            <i class="fas fa-sign-in-alt"></i> Doctor Login
+                        </button>
+                        <p style="margin-top: 10px; font-size: 0.78rem; color: var(--text-secondary); text-align: center;">
+                            <i class="fas fa-info-circle"></i> Default access code: <strong>doctor123</strong>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let regStream = null;
+        let faceCaptured = false;
+        let faceSkipped = false;
+        let loginStream = null;
+        let currentLoginType = 'patient';
+
+        async function startRegistrationCamera() {
+            try {
+                regStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 640,
+                        height: 480,
+                        facingMode: 'user'
+                    }
+                });
+                document.getElementById('regVideo').srcObject = regStream;
+                return true;
+            } catch (err) {
+                console.error('Camera error:', err);
+                document.getElementById('captureStatus').innerHTML =
+                    '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera access denied - you can still register without face data';
+                return false;
+            }
+        }
+
+        function stopRegistrationCamera() {
+            if (regStream) {
+                regStream.getTracks().forEach(track => track.stop());
+                regStream = null;
+            }
+        }
+
+        function skipFace() {
+            faceCaptured = false;
+            faceSkipped = true;
+            document.getElementById('faceData').value = '';
+            document.getElementById('faceImage').value = '';
+            document.getElementById('captureStatus').innerHTML =
+                '<i class="fas fa-check-circle" style="color: var(--success);"></i> Face enrollment skipped. You can register without it.';
+            document.getElementById('captureFaceBtn').innerHTML = '<i class="fas fa-camera"></i> Capture Face';
+
+            const preview = document.getElementById('cameraPreview');
+            preview.querySelectorAll('img').forEach(el => el.remove());
+            document.getElementById('regVideo').style.display = 'block';
+            stopRegistrationCamera();
+        }
+
+        function captureFace() {
+            const video = document.getElementById('regVideo');
+            const canvas = document.getElementById('regCanvas');
+            const status = document.getElementById('captureStatus');
+            const preview = document.getElementById('cameraPreview');
+
+            // If recapturing, restart camera first
+            if (faceCaptured || !video.srcObject) {
+                video.style.display = 'block';
+                preview.querySelectorAll('img').forEach(el => el.remove());
+                status.innerHTML = '<i class="fas fa-camera"></i> Starting camera...';
+                document.getElementById('captureFaceBtn').disabled = true;
+
+                startRegistrationCamera().then(success => {
+                    document.getElementById('captureFaceBtn').disabled = false;
+                    if (success) {
+                        status.innerHTML = '<i class="fas fa-camera"></i> Position your face and click Capture';
+                        // Give camera time to initialize, then capture
+                        setTimeout(function() {
+                            doCapture(video, canvas, status, preview);
+                        }, 800);
+                    } else {
+                        status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera unavailable';
+                    }
+                });
+                return;
+            }
+
+            doCapture(video, canvas, status, preview);
+        }
+
+        function doCapture(video, canvas, status, preview) {
+            if (!video.srcObject || video.videoWidth === 0) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera not ready. Try again.';
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+
+            const img = document.createElement('img');
+            img.src = imageData;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+
+            video.style.display = 'none';
+            preview.querySelectorAll('img').forEach(el => el.remove());
+            preview.appendChild(img);
+
+            document.getElementById('faceData').value = imageData;
+            document.getElementById('faceImage').value = 'captured_' + Date.now() + '.jpg';
+            faceCaptured = true;
+            faceSkipped = false;
+
+            status.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Face captured successfully!';
+            document.getElementById('captureFaceBtn').innerHTML = '<i class="fas fa-redo"></i> Recapture';
+
+            showToast('success', 'Face captured successfully!');
+            stopRegistrationCamera();
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+
+            const formData = new FormData(this);
+
+            if (faceCaptured && !faceSkipped) {
+                formData.append('face_data', document.getElementById('faceData').value);
+                formData.append('face_image', document.getElementById('faceImage').value);
+            }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Registration successful! Patient ID: ' + result.patient_id);
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    // Check for duplicate entry errors
+                    if (result.message && result.message.includes('Duplicate')) {
+                        if (result.message.includes('phone')) {
+                            showToast('error', 'This phone number is already registered. Please use a different number or login.');
+                        } else if (result.message.includes('email')) {
+                            showToast('error', 'This email is already registered. Please use a different email or login.');
+                        } else {
+                            showToast('error', 'Already registered. Try logging in instead.');
+                        }
+                    } else {
+                        showToast('error', result.message || 'Registration failed. Please try again.');
+                    }
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Register Patient';
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Register Patient';
+            }
+        });
+
+        // ============================================
+        // LOGIN FUNCTIONS
+        // ============================================
+        function openLogin(type) {
+            currentLoginType = type;
+            document.getElementById('loginOverlay').classList.add('active');
+
+            const title = document.getElementById('loginModalTitle');
+            const faceTab = document.getElementById('faceTab');
+            const manualTab = document.getElementById('manualTab');
+            const doctorTab = document.getElementById('doctorTab');
+
+            if (type === 'doctor') {
+                title.innerHTML = '<i class="fas fa-user-md"></i> Doctor Login';
+                faceTab.style.display = 'none';
+                manualTab.style.display = 'none';
+                doctorTab.style.display = 'block';
+                showLoginTab('doctor');
+            } else {
+                title.innerHTML = '<i class="fas fa-sign-in-alt"></i> Patient Login';
+                faceTab.style.display = 'block';
+                manualTab.style.display = 'block';
+                doctorTab.style.display = 'none';
+                showLoginTab('face');
+                startLoginCamera();
+            }
+        }
+
+        function closeLogin() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            stopLoginCamera();
+        }
+
+        function showLoginTab(tab) {
+            const faceLogin = document.getElementById('faceLogin');
+            const manualLogin = document.getElementById('manualLogin');
+            const doctorLogin = document.getElementById('doctorLogin');
+            const faceTab = document.getElementById('faceTab');
+            const manualTab = document.getElementById('manualTab');
+            const doctorTab = document.getElementById('doctorTab');
+
+            faceLogin.style.display = 'none';
+            manualLogin.style.display = 'none';
+            doctorLogin.style.display = 'none';
+
+            if (tab === 'face') {
+                faceLogin.style.display = 'block';
+                if (faceTab) {
+                    faceTab.className = 'btn btn-primary';
+                    manualTab.className = 'btn btn-secondary';
+                }
+                startLoginCamera();
+            } else if (tab === 'manual') {
+                manualLogin.style.display = 'block';
+                if (faceTab) {
+                    faceTab.className = 'btn btn-secondary';
+                    manualTab.className = 'btn btn-primary';
+                }
+                stopLoginCamera();
+            } else if (tab === 'doctor') {
+                doctorLogin.style.display = 'block';
+                if (doctorTab) doctorTab.className = 'btn btn-primary';
+                stopLoginCamera();
+            }
+        }
+
+        async function startLoginCamera() {
+            try {
+                loginStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 320,
+                        height: 240,
+                        facingMode: 'user'
+                    }
+                });
+                document.getElementById('loginVideo').srcObject = loginStream;
+            } catch (err) {
+                console.error('Camera error:', err);
+                document.getElementById('loginStatus').innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera access denied';
+            }
+        }
+
+        function stopLoginCamera() {
+            if (loginStream) {
+                loginStream.getTracks().forEach(track => track.stop());
+                loginStream = null;
+            }
+        }
+
+        async function captureAndLogin() {
+            const video = document.getElementById('loginVideo');
+            const canvas = document.getElementById('loginCanvas');
+            const status = document.getElementById('loginStatus');
+
+            if (!video.srcObject) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Camera not available';
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recognizing face...';
+
+            try {
+                const response = await fetch('/face-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    status.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> ' + (result.message || 'Face not recognized');
+                    showToast('error', result.message || 'Face not recognized');
+                }
+            } catch (err) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Connection error';
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        async function manualLogin(e) {
+            e.preventDefault();
+            const input = document.getElementById('loginPatientId').value.trim();
+
+            if (!input) {
+                showToast('error', 'Please enter your Patient ID or email');
+                return;
+            }
+
+            showToast('info', 'Looking up patient...');
+
+            try {
+                const response = await fetch('/manual-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: isNaN(input) ? null : parseInt(input),
+                        email: isNaN(input) ? input : null
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    showToast('error', result.message || 'Patient not found');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        async function doctorLogin(e) {
+            e.preventDefault();
+            const doctorId = document.getElementById('loginDoctorId').value;
+            const password = document.getElementById('loginDoctorPassword').value;
+
+            if (!doctorId) {
+                showToast('error', 'Please enter Doctor ID');
+                return;
+            }
+
+            try {
+                const response = await fetch('/doctor-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        doctor_id: parseInt(doctorId),
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Doctor login successful!');
+                    setTimeout(() => {
+                        window.location.href = '/doctor';
+                    }, 1500);
+                } else {
+                    showToast('error', result.message || 'Doctor not found');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        document.getElementById('loginOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeLogin();
+        });
+
+        // Start camera on page load
+        window.addEventListener('load', function() {
+            startRegistrationCamera();
+        });
+
+        window.addEventListener('beforeunload', function() {
+            stopRegistrationCamera();
+        });
+
+        // Input validation styling
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('error');
+                    this.classList.add('success');
+                } else {
+                    this.classList.remove('success');
+                    if (this.value) this.classList.add('error');
+                }
+            });
+        });
+
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas ${icons[type]}"></i> ${message}`;
+            toast.onclick = () => toast.remove();
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>

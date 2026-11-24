@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments | MediCare AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="brand-icon"><i class="fas fa-hospital"></i></div>
+            <span>MediCare AI</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="/appointments" class="active"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            <li>
+                <div class="user-badge">
+                    <div class="avatar">{{ patient.name[0] }}</div>
+                    <span class="user-name">{{ patient.name }}</span>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        <div class="container">
+            <!-- Header -->
+            <div class="animate-fadeInDown" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <h1 style="font-size: 1.8rem; margin-bottom: 6px;">My Appointments</h1>
+                    <p style="color: var(--text-secondary);">Manage and track all your medical appointments</p>
+                </div>
+                <button onclick="openBookModal()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Book Appointment
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card animate-fadeInUp delay-1">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ upcoming_appointments|length }}</h4>
+                        <p>Upcoming</p>
+                    </div>
+                </div>
+                <div class="stat-card animate-fadeInUp delay-2">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ past_appointments|length }}</h4>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card animate-fadeInUp delay-3">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>{{ appointments|selectattr("status", "equalto", "pending")|list|length }}</h4>
+                        <p>Pending</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Appointments -->
+            <div class="card animate-fadeInUp delay-2 mb-30">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Upcoming Appointments</h3>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_appointments %}
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Doctor</th>
+                                    <th>Specialization</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for apt in upcoming_appointments %}
+                                <tr>
+                                    <td><i class="fas fa-calendar" style="color: var(--secondary); margin-right: 6px;"></i> {{ apt.appointment_date }}</td>
+                                    <td><i class="fas fa-clock" style="color: var(--info); margin-right: 6px;"></i> {{ apt.appointment_time }}</td>
+                                    <td><strong>Dr. {{ apt.doctor_name }}</strong></td>
+                                    <td>{{ apt.specialization }}</td>
+                                    <td><span class="badge {% if apt.status == 'approved' %}badge-success{% elif apt.status == 'pending' %}badge-warning{% else %}badge-secondary{% endif %}">{{ apt.status }}</span></td>
+                                    <td>
+                                        <button onclick="cancelAppointment({{ apt.appointment_id }})" class="btn btn-sm" style="background: var(--danger); color: white;">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                        {% if apt.status == 'approved' %}
+                                        <a href="/appointment/{{ apt.appointment_id }}/qr" target="_blank" class="btn btn-sm" style="background: var(--secondary); color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                            <i class="fas fa-qrcode"></i> QR
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No Upcoming Appointments</h3>
+                        <p style="font-size: 0.85rem;">Book an appointment to get started</p>
+                        <button onclick="openBookModal()" class="btn btn-primary btn-sm mt-20">
+                            <i class="fas fa-plus"></i> Book Now
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Past Appointments -->
+            {% if past_appointments %}
+            <div class="card animate-fadeInUp delay-3">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Past Appointments</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Doctor</th>
+                                    <th>Specialization</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for apt in past_appointments %}
+                                <tr>
+                                    <td>{{ apt.appointment_date }}</td>
+                                    <td>{{ apt.appointment_time }}</td>
+                                    <td><strong>Dr. {{ apt.doctor_name }}</strong></td>
+                                    <td>{{ apt.specialization }}</td>
+                                    <td><span class="badge badge-secondary">{{ apt.status }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Book Appointment Modal -->
+    <div class="modal-overlay" id="bookModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-calendar-plus"></i> Book New Appointment</h3>
+                <button onclick="closeBookModal()" class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="bookAppointmentForm" onsubmit="bookAppointment(event)">
+                    <div class="form-group">
+                        <label><i class="fas fa-user-md"></i> Select Doctor</label>
+                        <select class="form-control" id="doctorSelect" required>
+                            <option value="">Choose a doctor</option>
+                            {% for doctor in doctors %}
+                            <option value="{{ doctor.doctor_id }}">
+                                Dr. {{ doctor.name }} - {{ doctor.specialization }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-stethoscope"></i> Specialization</label>
+                        <input type="text" class="form-control" id="specializationDisplay" readonly placeholder="Select a doctor first">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Date</label>
+                        <input type="date" class="form-control" id="aptDate" required min="{{ min_date }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Time</label>
+                        <select class="form-control" id="aptTime" required>
+                            <option value="">Select time slot</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-notes-medical"></i> Reason for Visit</label>
+                        <textarea class="form-control" id="aptReason" placeholder="Describe your symptoms or reason for visit" rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-check"></i> Confirm Booking
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Self-Care Suggestions Modal -->
+    <div class="modal-overlay" id="suggestionsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2f855a, #38a169); color: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                <h3 style="color: white;"><i class="fas fa-check-circle"></i> Appointment Booked Successfully!</h3>
+                <button onclick="closeSuggestionsModal()" class="close-modal" style="color: white;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <i class="fas fa-robot" style="font-size: 3rem; color: var(--accent); background: rgba(49, 130, 206, 0.1); padding: 15px; border-radius: 50%;"></i>
+                    <h4 style="margin-top: 12px; color: var(--primary);">AI Self-Care Suggestions</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Follow these tips until your appointment to stay comfortable</p>
+                </div>
+                <div id="suggestionsList" style="list-style: none; padding: 0;">
+                    <div style="text-align: center; padding: 30px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--accent);"></i>
+                        <p style="margin-top: 12px; color: var(--text-secondary);">AI is analyzing your symptoms to provide personalized suggestions...</p>
+                    </div>
+                </div>
+                <hr style="margin: 20px 0; border-color: var(--bg-light);">
+                <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                    <button onclick="closeSuggestionsModal()" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Got it!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <div class="chatbot-panel" id="chatbotPanel">
+            <div class="chatbot-header"><i class="fas fa-robot"></i>
+                <div class="chatbot-header-title">
+                    <div style="font-weight: 600;">MediCare AI Assistant</div>
+                    <div style="font-size: 0.7rem; opacity: 0.8;">Multilingual - Voice supported</div>
+                </div>
+                <div class="chatbot-header-tools">
+                    <select id="chatbotLang" class="chatbot-lang-select" title="Select language" onchange="onLangChange()">
+                        <option value="">Auto</option>
+                        <option>English</option>
+                        <option>हिन्दी (Hindi)</option>
+                        <option>தமிழ் (Tamil)</option>
+                        <option>తెలుగు (Telugu)</option>
+                        <option>বাংলা (Bengali)</option>
+                        <option>मराठी (Marathi)</option>
+                        <option>ગુજરાતી (Gujarati)</option>
+                        <option>اردو (Urdu)</option>
+                        <option>ਪੰਜਾਬੀ (Punjabi)</option>
+                        <option>മലയാളം (Malayalam)</option>
+                        <option>ಕನ್ನಡ (Kannada)</option>
+                        <option>Español (Spanish)</option>
+                        <option>Français (French)</option>
+                        <option>Deutsch (German)</option>
+                        <option>العربية (Arabic)</option>
+                        <option>Português (Portuguese)</option>
+                        <option>Русский (Russian)</option>
+                        <option>中文 (Chinese)</option>
+                        <option>日本語 (Japanese)</option>
+                        <option>한국어 (Korean)</option>
+                    </select>
+                    <button class="tts-toggle-btn" id="ttsToggleBtn" title="Voice replies ON (click to mute)" onclick="toggleTTS()"><i class="fas fa-volume-up"></i></button>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot">
+                    <div class="message-content">Hello! I'm your MediCare AI assistant. How can I help you today? &#128522;</div>
+                </div>
+            </div>
+            <div class="chatbot-suggestions">
+                <button class="suggestion-chip chip-symptom" onclick="sendSuggestion('I have fever and headache')"><i class="fas fa-thermometer-half"></i> Fever</button>
+                <button class="suggestion-chip chip-symptom" onclick="sendSuggestion('I have cough and cold')"><i class="fas fa-head-side-cough"></i> Cough</button>
+                <button class="suggestion-chip chip-hospital" onclick="sendSuggestion('How to book appointment?')"><i class="fas fa-calendar"></i> Appointment</button>
+                <button class="suggestion-chip chip-hospital" onclick="sendSuggestion('What are your working hours?')"><i class="fas fa-clock"></i> Hours</button>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter')sendMessage()">
+                <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Voice input"><i class="fas fa-microphone"></i></button>
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chatbot-toggle" onclick="toggleChatbot()"><i class="fas fa-robot"></i></button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* Doctor data from server - using tojson to safely render */
+        var doctorsData = JSON.parse('{{ doctors_json|safe }}');
+
+        /* Auto-fill specialization when doctor is selected */
+        document.getElementById('doctorSelect').addEventListener('change', function() {
+            var doctorId = this.value;
+            var specDisplay = document.getElementById('specializationDisplay');
+            if (doctorId && doctorsData[doctorId]) {
+                specDisplay.value = doctorsData[doctorId].specialization;
+            } else {
+                specDisplay.value = '';
+                specDisplay.placeholder = 'Select a doctor first';
+            }
+        });
+
+        /* Book Modal */
+        function openBookModal() {
+            document.getElementById('bookModal').classList.add('active');
+        }
+
+        function closeBookModal() {
+            document.getElementById('bookModal').classList.remove('active');
+        }
+
+        async function bookAppointment(e) {
+            e.preventDefault();
+
+            var doctorId = document.getElementById('doctorSelect').value;
+            var date = document.getElementById('aptDate').value;
+            var time = document.getElementById('aptTime').value;
+            var symptoms = document.getElementById('aptReason').value;
+
+            if (!doctorId || !date || !time) {
+                showToast('error', 'Please fill all required fields (Doctor, Date, Time)');
+                return;
+            }
+
+            var btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+
+            try {
+                var response = await fetch('/book-appointment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        doctor_id: parseInt(doctorId),
+                        appointment_date: date,
+                        appointment_time: time,
+                        symptoms: symptoms
+                    })
+                });
+
+                var result = await response.json();
+
+                if (result.success) {
+                    closeBookModal();
+                    // Show AI suggestions modal
+                    showAISuggestions(symptoms);
+                } else {
+                    showToast('error', result.message || 'Failed to book appointment');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Confirm Booking';
+        }
+
+        /* AI Self-Care Suggestions */
+        function openSuggestionsModal() {
+            document.getElementById('suggestionsModal').classList.add('active');
+        }
+
+        function closeSuggestionsModal() {
+            document.getElementById('suggestionsModal').classList.remove('active');
+            // Reload page after closing suggestions
+            setTimeout(function() {
+                window.location.reload();
+            }, 300);
+        }
+
+        async function showAISuggestions(symptoms) {
+            // Show the modal with loading state
+            openSuggestionsModal();
+
+            try {
+                var response = await fetch('/get-selfcare-suggestions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symptoms: symptoms || ''
+                    })
+                });
+
+                var result = await response.json();
+
+                if (result.success && result.suggestions) {
+                    renderSuggestions(result.suggestions);
+                } else {
+                    renderSuggestions([
+                        "Stay hydrated and get plenty of rest.",
+                        "Monitor your symptoms and note any changes.",
+                        "Avoid self-medication until consulting the doctor.",
+                        "Keep your appointment time and bring relevant medical records.",
+                        "In case of emergency, visit the nearest emergency room."
+                    ]);
+                }
+            } catch (err) {
+                renderSuggestions([
+                    "Stay hydrated and drink plenty of water.",
+                    "Get adequate rest until your appointment.",
+                    "Write down any questions for your doctor.",
+                    "Keep your appointment confirmation handy.",
+                    "For emergencies, call 108 immediately."
+                ]);
+            }
+        }
+
+        function renderSuggestions(suggestions) {
+            var listDiv = document.getElementById('suggestionsList');
+            var icons = ['fa-tint', 'fa-bed', 'fa-thermometer-half', 'fa-clipboard-list', 'fa-ambulance'];
+            var colors = ['#3182ce', '#2f855a', '#d69e2e', '#bd1e2e', '#805ad5'];
+
+            var html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+            suggestions.forEach(function(suggestion, index) {
+                var iconIndex = index % icons.length;
+                var icon = icons[iconIndex];
+                var color = colors[iconIndex];
+                html += '<li style="display: flex; align-items: flex-start; gap: 14px; padding: 12px 16px; margin-bottom: 8px; background: var(--bg-light); border-radius: var(--radius-md); border-left: 4px solid ' + color + ';">';
+                html += '<div style="width: 36px; height: 36px; min-width: 36px; border-radius: 50%; background: ' + color + '; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.9rem;">';
+                html += '<i class="fas ' + icon + '"></i></div>';
+                html += '<div><p style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--text-primary);">' + suggestion + '</p></div>';
+                html += '</li>';
+            });
+            html += '</ul>';
+
+            listDiv.innerHTML = html;
+        }
+
+        /* Close suggestions modal on outside click */
+        document.getElementById('suggestionsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSuggestionsModal();
+        });
+
+        async function cancelAppointment(aptId) {
+            if (!confirm('Are you sure you want to cancel this appointment?')) return;
+
+            try {
+                var response = await fetch('/update-appointment-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appointment_id: aptId,
+                        status: 'rejected'
+                    })
+                });
+
+                var result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Appointment cancelled successfully');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast('error', result.message || 'Failed to cancel appointment');
+                }
+            } catch (err) {
+                showToast('error', 'Connection error. Please try again.');
+            }
+        }
+
+        function showToast(type, message) {
+            var container = document.getElementById('toastContainer');
+            var icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.innerHTML = '<i class="fas ' + icons[type] + '"></i> ' + message;
+            toast.onclick = function() {
+                toast.remove();
+            };
+
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(function() {
+                    toast.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        /* Close modal on outside click */
+        document.getElementById('bookModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBookModal();
+        });
+    </script>
+    <script src="/static/js/chatbot.js"></script>
+    </body>
+
+</html>
